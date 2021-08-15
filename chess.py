@@ -1,8 +1,10 @@
 import copy
 from enum import Enum
+from typing import List
+
 from chessErrors import *
 
-                        #    WHITE, BLACK
+# [Piece, Colour]            WHITE, BLACK
 UNICODE_PIECE_SYMBOLS = [["\u2654", "\u265A"], # King   |K
                          ["\u2655", "\u265B"], # Queen  |Q
                          ["\u2656", "\u265C"], # Rook   |R
@@ -11,8 +13,9 @@ UNICODE_PIECE_SYMBOLS = [["\u2654", "\u265A"], # King   |K
                          ["\u2659", "\u265F"]] # Pawn   |P
 
 UNICODE_WHITE_SPACE = "\u3000"
-
-FILE_NOTATION = {chr(i) : int(i-ord('A')) for i in range(ord('A'), ord('I'))}
+# ['A'...'H': 0...7]
+FILE_NOTATION = {chr(i) : int(i - ord('A')) for i in range(ord('A'), ord('I'))}
+# ['1'...'8': 0...7]
 RANK_NOTATION = {str(i+1) : i for i in range(8)}
 
 class ColourType(Enum):
@@ -28,15 +31,17 @@ class PieceType(Enum):
     PAWN = 5
 
 class Piece:
-    piece_id = None
+    piece_id: int
+    piece_type: PieceType
+    colour_type: ColourType
     def __init__(self, piece_type: PieceType, colour_type: ColourType):
         self.piece_type = piece_type
         self.colour_type = colour_type
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return UNICODE_PIECE_SYMBOLS[self.piece_type.value][self.colour_type.value]
 
-    def set_id(self, piece_id):
+    def set_id(self, piece_id) -> None:
         self.piece_id = piece_id
 
 
@@ -49,20 +54,21 @@ chess_pieces = {"k": Piece(PieceType.KING, ColourType.WHITE)  , "q": Piece(Piece
                 "N": Piece(PieceType.KNIGHT, ColourType.BLACK), "P": Piece(PieceType.PAWN, ColourType.BLACK)}
 
 class Board:
-    board = [[None for _ in range(8)] for _ in range(8)]
+    # [Rank][File]
+    board: List[List[Piece]] = [[None for _ in range(8)] for _ in range(8)]
     # [K,Q,R,B,N,P][WHITE, BLACK][NUMBER]
-    pieces = [[[] for _ in range(2)] for _ in range(6)]
-    fullmove_number = 1
-    halfmove_number = 0
+    pieces: List[List[List[Piece]]] = [[[] for _ in range(2)] for _ in range(6)]
+    fullmove_number: int = 1
+    halfmove_number: int = 0
     en_passant_square = None
     castling_rights = "KQkq"
-    turn = ColourType.WHITE
+    turn: ColourType = ColourType.WHITE
 
-    def __init__(self, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
-        self.read_fen(fen)
+    def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
+        self._read_fen(fen)
         print(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         board_str = ""
         for rank in reversed(self.board):
             board_str += "|"
@@ -74,7 +80,7 @@ class Board:
             board_str += "\n"
         return board_str
 
-    def read_fen(self, fen):
+    def _read_fen(self, fen: str) -> None:
         # rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
         fen = fen.split()
         self.fullmove_number = int(fen.pop())
@@ -93,7 +99,7 @@ class Board:
 
         self._id_pieces()
 
-    def _read_board_fen(self, board_fen):
+    def _read_board_fen(self, board_fen: str) -> None:
         ranks = board_fen.split("/")
         for rank, pieces in enumerate(ranks):
             file = 0
@@ -106,13 +112,14 @@ class Board:
                     self.board[rank][file] = next_piece
                     file +=1
 
-    def _id_pieces(self):
+    def _id_pieces(self) -> None:
+        # initialize id after copying
         for type_ in self.pieces:
             for colour in type_:
                 for i, piece in enumerate(colour):
                     piece.set_id(i)
 
-    def make_move(self, from_, to_):
+    def make_move(self, from_: str, to_: str):
         from_file, from_rank = FILE_NOTATION[from_[:1]], RANK_NOTATION[from_[1:2]]
         to_file, to_rank = FILE_NOTATION[to_[:1]], RANK_NOTATION[to_[1:2]]
         piece_to_move = self.board[from_rank][from_file]
