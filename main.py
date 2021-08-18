@@ -1,5 +1,5 @@
 import pyglet
-from chess import Board
+import chess
 from chessExceptions import InvalidMoveException
 
 class Piece(pyglet.text.Label):
@@ -26,7 +26,7 @@ class Main(pyglet.window.Window):
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         super().__init__(self.size, self.size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
-        self.board = Board(fen)
+        self.board = chess.Board(fen)
         self.board_shapes = self._board_generator()
         self.piece_shapes = self._piece_generator()
 
@@ -44,17 +44,17 @@ class Main(pyglet.window.Window):
             if self.selected_piece is None:
                 self.selected_piece = self.piece_shapes[clicked_rank][clicked_file]
                 return
-            self.move(clicked_rank, clicked_file)
+            self.move((clicked_rank, clicked_file))
 
-    def move(self, to_rank, to_file):
-        from_rank, from_file = self.selected_piece.rank, self.selected_piece.file
+    def move(self, to_):
+        from_ = (self.selected_piece.rank, self.selected_piece.file)
         try:
-            self.board.move(from_rank, from_file, to_rank, to_file)
+            self.board.move(from_, to_)
             # update piece
-            self.selected_piece.x = to_file * self.square_size + self.x_offset
-            self.selected_piece.y = to_rank * self.square_size + self.y_offset
-            self.selected_piece.rank = to_rank
-            self.selected_piece.file = to_file
+            self.selected_piece.x = to_[1] * self.square_size + self.x_offset
+            self.selected_piece.y = to_[0] * self.square_size + self.y_offset
+            self.selected_piece.rank = to_[0]
+            self.selected_piece.file = to_[1]
             # check capture
             capture_piece = self.piece_shapes[to_rank][to_file]
             if capture_piece is not None:
@@ -85,11 +85,25 @@ class Main(pyglet.window.Window):
                if piece is not None else None)
                for j, piece in enumerate(rank)] for i, rank in enumerate(self.board.board)]
 
+def move(chessNotation):
+    return game.move_from_notation(chessNotation[:2], chessNotation[2:4])
 
 if __name__ == '__main__':
-    main = Main()
-    # def update(dt):
-    #     pass
-    #
-    # pyglet.clock.schedule_interval(update, 1 / 10.0)
-    pyglet.app.run()
+    game = chess.Game("rnbqkbnr/pppppppp/2P5/1P6/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    move("a2a4")
+    move("b4a3")
+    move("b2b4")
+    move("c3d2")
+    move("b1a3")
+    game.undo_move()
+    game.undo_move()
+    game.undo_move()
+    game.undo_move()
+    game.undo_move()
+
+    # main = Main()
+    # # def update(dt):
+    # #     pass
+    # #
+    # # pyglet.clock.schedule_interval(update, 1 / 10.0)
+    # pyglet.app.run()
