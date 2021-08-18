@@ -64,7 +64,7 @@ class Board:
             piece = copy.deepcopy(CHESS_PIECES[piece_fen])
         self.state[rank][file] = Square(rank, file, piece)
 
-    def try_move(self, move: Move):
+    def try_move(self, move: Move) -> bool:
         try:
             self._check_move_is_legal(move)
             self._make_move(move)
@@ -72,8 +72,10 @@ class Board:
             self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
             self.legal_moves = []
             print(self)
+            return True
         except InvalidMoveException as exc:
             print("Invalid Move")
+            return False
 
     def undo_move(self) -> None:
         move = self.move_log.pop()
@@ -125,7 +127,7 @@ class Board:
                     valid_moves += self._get_valid_moves_for_square(square)
         return valid_moves
 
-    def _get_valid_moves_for_square(self, square: Square):
+    def _get_valid_moves_for_square(self, square: Square) -> list[Move]:
         valid_moves = []
         for potential_move in POTENTIAL_MOVES[square.piece.type]:
             # check pawn for en-passant and capture
@@ -135,7 +137,7 @@ class Board:
                 valid_moves += self._handle_other_moves(square, potential_move)
         return valid_moves
 
-    def _handle_pawn_moves(self, square: Square, potential_move: PawnPotentialMove):
+    def _handle_pawn_moves(self, square: Square, potential_move: PawnPotentialMove) -> list[Move]:
         rank_change, file_change = potential_move.get_rank_file_change(square.piece.colour_type)
         new_rank, new_file = square.rank + rank_change, square.file + file_change
         if self._off_board(new_rank, new_file):
@@ -164,7 +166,7 @@ class Board:
                     return []
         return [move]
 
-    def _handle_other_moves(self, square: Square, potential_move: PotentialMove):
+    def _handle_other_moves(self, square: Square, potential_move: PotentialMove) -> list[Move]:
         valid_moves = []
         rank_change, file_change = potential_move.get_rank_file_change(square.piece.colour_type)
         # if arbitrary range: loop till hit piece
@@ -176,15 +178,19 @@ class Board:
             # check for blocking piece
             blocking_piece = self.state[new_rank][new_file].piece
             if blocking_piece is not None and blocking_piece.colour_type == square.piece.colour_type:
+                # break immediately if same ColourType
                 break
             new_square = self.state[new_rank][new_file]
             valid_moves.append(Move(square, new_square))
+            if blocking_piece is not None and blocking_piece.colour_type != square.piece.colour_type:
+                # break after appending the move if opposite ColourType
+                break
         return valid_moves
 
-    def _off_board(self, rank, file):
+    def _off_board(self, rank: int, file: int) -> bool:
         return rank < 0 or rank > len(self.state)-1 or file < 0 or file > len(self.state[0])-1
 
-    def encode_en_passant(self, move: Move):
+    def encode_en_passant(self, move: Move) -> None:
         if move.from_.piece.colour_type == ColourType.WHITE:
             move.capture_square = self.state[move.to_.rank-1][move.to_.file]
         else:

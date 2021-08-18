@@ -87,7 +87,7 @@ class Square:
     def __repr__(self) -> str:
         return f"Rank {self.rank} File {self.file} {str(self.piece)}"
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'Square') -> bool:
         if isinstance(other, Square):
             return (self.rank == other.rank) and (self.file == other.file) and (self.piece == other.piece)
         return False
@@ -115,7 +115,7 @@ class Move:
             move_str += f"Captured {self.captured_piece}"
         return move_str
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: 'Move') -> bool:
         if isinstance(other, Move):
             return (self.from_ == other.from_) and (self.to_ == other.to_)
         return False

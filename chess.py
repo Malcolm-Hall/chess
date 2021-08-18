@@ -11,8 +11,6 @@ class Game:
     # State variables
     fullmove_number: int = 1
     halfmove_number: int = 0
-    # Captured pieces
-
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         # TODO: verify fen
         self.setup_from_fen(fen)
@@ -40,11 +38,11 @@ class Game:
         to_rank, to_file = read_chess_notation(to_position)
         self.move_from_position(from_rank, from_file, to_rank, to_file)
 
-    def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int) -> None:
+    def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int) -> bool:
         from_ = self.board.state[from_rank][from_file]
         to_ = self.board.state[to_rank][to_file]
         move = Move(from_, to_)
         # TODO: try piece_ty is PieceType.PAWN
         if self.board.en_passant_square == to_ and from_.piece.piece_type == PieceType.PAWN:
             self.board.encode_en_passant(move)
-        self.board.try_move(move)
+        return self.board.try_move(move)

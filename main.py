@@ -1,34 +1,42 @@
 import pyglet
+from typing import Union, Optional
 import chess
-from chessExceptions import InvalidMoveException
+from piece import Piece
 
-class Piece(pyglet.text.Label):
-    def __init__(self, piece: str, x: int, y: int, rank: int, file: int, batch=None, group=None):
+
+class PieceSprite(pyglet.text.Label):
+    def __init__(self, piece: str, x: int, y: int, rank: int, file: int, font_size=35, batch=None, group=None):
         super().__init__(str(piece),
                          x=x, y=y,
-                         font_size=35,
+                         font_size=font_size,
                          batch=batch,
                          group=group)
         self.rank = rank
         self.file = file
 
+    def update(self, rank, file):
+        self.rank = rank
+        self.file = file
+
+
 
 class Main(pyglet.window.Window):
-    size = 400
+    size = 512
     square_size = size // 8
-    x_offset, y_offset = -1, 5
-    selected_piece = None
-
+    x_offset, y_offset = -1, 7
+    piece_size = 45
+    selected_square = None
     main_batch = pyglet.graphics.Batch()
     board_to_draw = pyglet.graphics.OrderedGroup(0)
     pieces_to_draw = pyglet.graphics.OrderedGroup(1)
-
+    board_sprites: list[pyglet.shapes.Rectangle]
+    piece_sprites: list[list[Optional[PieceSprite]]]
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         super().__init__(self.size, self.size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
-        self.board = chess.Board(fen)
-        self.board_shapes = self._board_generator()
-        self.piece_shapes = self._piece_generator()
+        self.game = chess.Game(fen)
+        self.board_sprites = self._board_generator()
+        self.piece_sprites = self._piece_generator()
 
     def on_draw(self):
         self.clear()
@@ -39,33 +47,20 @@ class Main(pyglet.window.Window):
         if button is pyglet.window.mouse.LEFT:
             clicked_file = int(x / self.size * 8)
             clicked_rank = int(y / self.size * 8)
-            if self.selected_piece is not None and self.selected_piece.rank == clicked_rank and self.selected_piece.file == clicked_file:
+            if self.selected_square is not None and self.selected_square == (clicked_rank, clicked_file):
+                self.selected_square = None
                 return
-            if self.selected_piece is None:
-                self.selected_piece = self.piece_shapes[clicked_rank][clicked_file]
+            if self.selected_square is None:
+                if self.piece_sprites[clicked_rank][clicked_file] is not None:
+                    self.selected_square = (clicked_rank, clicked_file)
                 return
-            self.move((clicked_rank, clicked_file))
+            self.move(clicked_rank, clicked_file)
 
-    def move(self, to_):
-        from_ = (self.selected_piece.rank, self.selected_piece.file)
-        try:
-            self.board.move(from_, to_)
-            # update piece
-            self.selected_piece.x = to_[1] * self.square_size + self.x_offset
-            self.selected_piece.y = to_[0] * self.square_size + self.y_offset
-            self.selected_piece.rank = to_[0]
-            self.selected_piece.file = to_[1]
-            # check capture
-            capture_piece = self.piece_shapes[to_rank][to_file]
-            if capture_piece is not None:
-                capture_piece.delete()
-            # move reference
-            self.piece_shapes[to_rank][to_file] = self.selected_piece
-            self.piece_shapes[from_rank][from_file] = None
-        except InvalidMoveException as err:
-            print(f"Invalid Move: {err}")
-        finally:
-            self.selected_piece = None
+    def move(self, to_rank, to_file):
+        from_rank, from_file = self.selected_square
+        if self.game.move_from_position(from_rank, from_file, to_rank, to_file):
+            self.brute_force_update()
+        self.selected_square = None
 
     def _board_generator(self) -> list[pyglet.shapes.Rectangle]:
         return [pyglet.shapes.Rectangle(x=j*self.square_size, y=i*self.square_size,
@@ -76,14 +71,23 @@ class Main(pyglet.window.Window):
                 for j in range(8) for i in range(8)]
     
     def _piece_generator(self):
-        return [[(Piece(str(piece),
-                        j * self.square_size + self.x_offset,
-                        i * self.square_size + self.y_offset,
-                        i, j,
-                        batch=self.main_batch,
-                        group=self.pieces_to_draw)
-               if piece is not None else None)
-               for j, piece in enumerate(rank)] for i, rank in enumerate(self.board.board)]
+        return [[(PieceSprite(str(square.piece),
+                              rank * self.square_size + self.x_offset,
+                              file * self.square_size + self.y_offset,
+                              rank, file,
+                              font_size=self.piece_size,
+                              batch=self.main_batch,
+                              group=self.pieces_to_draw)
+                 if square.piece is not None else None)
+                 for rank, square in enumerate(squares)] for file, squares in enumerate(self.game.board.state)]
+
+    def brute_force_update(self):
+        for rank in self.piece_sprites:
+            for sprite in rank:
+                if sprite is None:
+                    continue
+                sprite.delete()
+        self.piece_sprites = self._piece_generator()
 
 def move(chessNotation):
     return game.move_from_notation(chessNotation[:2], chessNotation[2:4])
@@ -101,9 +105,9 @@ if __name__ == '__main__':
     game.undo_move()
     game.undo_move()
 
-    # main = Main()
+    main = Main("rnbqkbnr/pppppppp/2P5/1P6/8/PPPP4/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     # # def update(dt):
     # #     pass
     # #
     # # pyglet.clock.schedule_interval(update, 1 / 10.0)
-    # pyglet.app.run()
+    pyglet.app.run()

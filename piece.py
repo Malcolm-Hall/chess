@@ -18,7 +18,7 @@ class PieceType(Enum):
 class Piece:
     piece_type: PieceType
     colour_type: ColourType
-    piece_id: int
+    piece_id: int = 0
     def __init__(self, piece_type: PieceType, colour_type: ColourType):
         self.piece_type = piece_type
         self.colour_type = colour_type
