@@ -98,6 +98,7 @@ class Move:
     to_: Square
     capture_square: Square
     captured_piece: Piece
+    previous_en_passant_square: Square
     def __init__(self, from_: Square, to_: Square, capture_square: Square = None):
         self.from_ = from_
         self.to_ = to_

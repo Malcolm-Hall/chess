@@ -68,10 +68,8 @@ class Board:
         try:
             self._check_move_is_legal(move)
             self._make_move(move)
-            self.move_log.append(move)
-            self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
+            self.valid_moves = []
             self.legal_moves = []
-            print(self)
             return True
         except InvalidMoveException as exc:
             print("Invalid Move")
@@ -82,8 +80,9 @@ class Board:
         move.from_.piece = move.to_.piece
         move.to_.piece = None
         move.capture_square.piece = move.captured_piece
-        self.turn = move.from_.piece.colour_type
-        print(self)
+        self.turn = ColourType.BLACK if self.turn == ColourType.WHITE else ColourType.WHITE
+        # re-assign the correct en-passant square
+        self.en_passant_square = move.previous_en_passant_square
 
     def _check_move_is_legal(self, move: Move) -> None:
         # check the move makes sense
@@ -98,26 +97,24 @@ class Board:
             self._generate_legal_moves()
         # check if the move is legal
         if move not in self.legal_moves:
-            print(self.legal_moves)
+            # print(self.legal_moves)
             raise IllegalMoveException()
 
-    def _generate_legal_moves(self) -> None:
-        self.legal_moves = [Move(self.state[1][0],self.state[2][0]), Move(self.state[0][1],self.state[2][2]), Move(self.state[7][1],self.state[5][2])]
-        self.valid_moves = self._get_valid_moves()
-        # TODO: Generate legal moves
-        self.legal_moves = self.valid_moves
-
     def _make_move(self, move: Move) -> None:
-        # handle double pawn moves
-        if move.from_.piece.piece_type == PieceType.PAWN and (move.to_.rank - move.from_.rank) == 2:
-            en_passant_rank = move.to_.rank - 1 if self.turn == ColourType.WHITE else move.to_.rank + 1
-            self.en_passant_square = self.state[en_passant_rank][move.to_.file]
+        # assign en-passant square
+        self._next_en_passant_square(move)
         move.to_.piece = move.from_.piece
         move.from_.piece = None
         # handle capture
         if move.capture_square != move.to_:
-            print("en-passant!")
             move.capture_square.piece = None
+        self.move_log.append(move)
+        self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
+
+    def _generate_legal_moves(self) -> None:
+        self.valid_moves = self._get_valid_moves()
+        # TODO: Generate legal moves more efficiently
+        self.legal_moves = self._brute_force_legal_moves()
 
     def _get_valid_moves(self) -> list[Move]:
         valid_moves = []
@@ -187,6 +184,22 @@ class Board:
                 break
         return valid_moves
 
+    def _brute_force_legal_moves(self):
+        legal_moves = []
+        for move in self.valid_moves:
+            self._make_move(move)
+            next_moves = self._get_valid_moves()
+            legal = True
+            for next_move in next_moves:
+                if next_move.captured_piece is None or next_move.captured_piece.piece_type != PieceType.KING:
+                    continue
+                legal = False
+                break
+            if legal:
+                legal_moves.append(move)
+            self.undo_move()
+        return legal_moves
+
     def _off_board(self, rank: int, file: int) -> bool:
         return rank < 0 or rank > len(self.state)-1 or file < 0 or file > len(self.state[0])-1
 
@@ -196,3 +209,9 @@ class Board:
         else:
             move.capture_square = self.state[move.to_.rank+1][move.to_.file]
         move.captured_piece = move.capture_square.piece
+
+    def _next_en_passant_square(self, move: Move):
+        move.previous_en_passant_square = self.en_passant_square
+        if move.from_.piece.piece_type == PieceType.PAWN and abs(move.to_.rank - move.from_.rank) == 2:
+            en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
+            self.en_passant_square = self.state[en_passant_rank][move.to_.file]

@@ -55,12 +55,15 @@ class Main(pyglet.window.Window):
                     self.selected_square = (clicked_rank, clicked_file)
                 return
             self.move(clicked_rank, clicked_file)
+        if button is pyglet.window.mouse.RIGHT:
+            self.game.undo_move()
+            self.brute_force_update()
 
     def move(self, to_rank, to_file):
         from_rank, from_file = self.selected_square
         if self.game.move_from_position(from_rank, from_file, to_rank, to_file):
             self.brute_force_update()
-        self.selected_square = None
+        self.selected_square = (to_rank, to_file)
 
     def _board_generator(self) -> list[pyglet.shapes.Rectangle]:
         return [pyglet.shapes.Rectangle(x=j*self.square_size, y=i*self.square_size,
@@ -89,25 +92,11 @@ class Main(pyglet.window.Window):
                 sprite.delete()
         self.piece_sprites = self._piece_generator()
 
-def move(chessNotation):
-    return game.move_from_notation(chessNotation[:2], chessNotation[2:4])
 
 if __name__ == '__main__':
-    game = chess.Game("rnbqkbnr/pppppppp/2P5/1P6/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    move("a2a4")
-    move("b4a3")
-    move("b2b4")
-    move("c3d2")
-    move("b1a3")
-    game.undo_move()
-    game.undo_move()
-    game.undo_move()
-    game.undo_move()
-    game.undo_move()
-
-    main = Main("rnbqkbnr/pppppppp/2P5/1P6/8/PPPP4/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    # # def update(dt):
-    # #     pass
-    # #
-    # # pyglet.clock.schedule_interval(update, 1 / 10.0)
+    main = Main("rnbqkbnr/pppppppp/PP6/PP6/8/PPPP4/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    # def update(dt):
+    #     main.on_draw()
+    #
+    # pyglet.clock.schedule_interval(update, 1 / 1.0)
     pyglet.app.run()
