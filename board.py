@@ -212,6 +212,8 @@ class Board:
 
     def _next_en_passant_square(self, move: Move):
         move.previous_en_passant_square = self.en_passant_square
+        self.en_passant_square = None
         if move.from_.piece.piece_type == PieceType.PAWN and abs(move.to_.rank - move.from_.rank) == 2:
             en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
             self.en_passant_square = self.state[en_passant_rank][move.to_.file]
+
