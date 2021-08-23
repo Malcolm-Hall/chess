@@ -16,9 +16,16 @@ UNICODE_PIECE_SYMBOLS: list[list[str, str]] = [["\u2654", "\u265A"], # King   |K
                                                ["\u2658", "\u265E"], # Knight |N
                                                ["\u2659", "\u265F"]] # Pawn   |P
 
+# [Piece][Colour]
+PIECE_STRS: list[list[str, str]] = [["k","K"],
+                                    ["q","Q"],
+                                    ["r","R"],
+                                    ["b","B"],
+                                    ["n","N"],
+                                    ["p","P"]]
+
 UNICODE_WHITE_SPACE: str = "\u3000"
 # ['A'...'H': 0...7]
 FILE_NOTATION: dict[str, int] = {chr(i) : int(i - ord('a')) for i in range(ord('a'), ord('i'))}
 # ['1'...'8': 0...7]
 RANK_NOTATION: dict[str, int] = {str(i+1) : i for i in range(8)}
-

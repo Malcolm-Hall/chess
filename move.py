@@ -43,7 +43,7 @@ def generate_knight_moves():
         knight_moves.append(PotentialMove(direction[0], direction[1]))
     return knight_moves
 
-def generate_moves():
+def generate_non_pawn_moves():
     perms = "ABC"
     conversion = {"A":-1,
                   "B":0,
@@ -66,7 +66,7 @@ def generate_moves():
     return [king_moves, queen_moves, rook_moves, bishop_moves,knight_moves]
 
 PPM = PawnPotentialMove
-generated_moves = generate_moves()
+generated_moves = generate_non_pawn_moves()
 # [K,Q,R,B,N,P]
 POTENTIAL_MOVES = [generated_moves[0],  # K
                    generated_moves[1],  # Q
@@ -99,9 +99,11 @@ class Move:
     capture_square: Square
     captured_piece: Piece
     previous_en_passant_square: Square
-    def __init__(self, from_: Square, to_: Square, capture_square: Square = None):
+    promotion_piece: Optional[Piece]
+    def __init__(self, from_: Square, to_: Square, capture_square: Square = None, promotion_piece: Piece = None):
         self.from_ = from_
         self.to_ = to_
+        self.promotion_piece = promotion_piece
         if capture_square is None:
             self.capture_square = to_
             self.captured_piece = to_.piece
@@ -118,6 +120,6 @@ class Move:
 
     def __eq__(self, other: 'Move') -> bool:
         if isinstance(other, Move):
-            return (self.from_ == other.from_) and (self.to_ == other.to_)
+            return (self.from_ == other.from_) and (self.to_ == other.to_) and (self.promotion_piece == other.promotion_piece)
         return False
 

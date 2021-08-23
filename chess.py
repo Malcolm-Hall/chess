@@ -7,7 +7,6 @@ class Game:
     board: Board
     # [K,Q,R,B,N,P][WHITE, BLACK][NUMBER]
     pieces: list[list[list[Piece]]] = [[[] for _ in range(2)] for _ in range(6)]
-    move_log: list[Move] = []
     # State variables
     fullmove_number: int = 1
     halfmove_number: int = 0
@@ -31,6 +30,7 @@ class Game:
                     self.pieces[square.piece.type][square.piece.colour].append(square.piece)
 
     def undo_move(self) -> None:
+        # Todo: undo logic involving fullmove and halfmove number
         self.board.undo_move()
 
     def move_from_notation(self, from_position: str, to_position: str) -> None:
@@ -42,7 +42,11 @@ class Game:
         from_ = self.board.state[from_rank][from_file]
         to_ = self.board.state[to_rank][to_file]
         move = Move(from_, to_)
-        # TODO: try piece_ty is PieceType.PAWN
-        if self.board.en_passant_square == to_ and from_.piece.piece_type == PieceType.PAWN:
-            self.board.encode_en_passant(move)
+        if from_.piece is not None and from_.piece.piece_type == PieceType.PAWN:
+            if self.board.is_pawn_promotion(to_.rank, from_.piece.colour_type):
+            # Todo: allow promotion to piece other than queen
+                self.board.encode_pawn_promotion(move, PieceType.QUEEN)
+            if self.board.is_en_passant(to_) and from_.piece.piece_type == PieceType.PAWN:
+                self.board.encode_en_passant(move)
+
         return self.board.try_move(move)
