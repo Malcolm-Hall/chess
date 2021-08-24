@@ -39,14 +39,15 @@ class Game:
         to_rank, to_file = read_chess_notation(to_position)
         self.move_from_position(from_rank, from_file, to_rank, to_file)
 
-    def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int) -> bool:
+    def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int, promotion_piece: PieceType = PieceType.QUEEN) -> bool:
         from_ = self.board.state[from_rank][from_file]
         to_ = self.board.state[to_rank][to_file]
-        if from_.piece is not None and from_.piece.piece_type == PieceType.PAWN:
+        if from_.piece is None:
+            return False
+        if from_.piece.piece_type == PieceType.PAWN:
             move = PawnMove(from_, to_)
             if self.board.is_pawn_promotion(to_.rank, from_.piece.colour_type):
-            # Todo: allow promotion to piece other than queen
-                self.board.encode_pawn_promotion(move, PieceType.QUEEN)
+                self.board.encode_pawn_promotion(move, promotion_piece)
             if self.board.is_en_passant(to_) and from_.piece.piece_type == PieceType.PAWN:
                 self.board.encode_en_passant(move)
         else:
