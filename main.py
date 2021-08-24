@@ -1,3 +1,5 @@
+import os
+
 import pyglet
 from typing import Union, Optional
 import chess
@@ -63,8 +65,8 @@ class Main(pyglet.window.Window):
         from_rank, from_file = self.selected_square
         if self.game.move_from_position(from_rank, from_file, to_rank, to_file):
             self.brute_force_update()
-        self.selected_square = (to_rank, to_file)
-        print(self.game.board)
+            print(self.game.board)
+        self.selected_square = None
 
     def _board_generator(self) -> list[pyglet.shapes.Rectangle]:
         return [pyglet.shapes.Rectangle(x=j*self.square_size, y=i*self.square_size,

@@ -112,22 +112,25 @@ class Board:
                 move.capture_square.piece = None
         move.from_.piece = None
         self.move_log.append(move)
-        self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
+        self.turn = ColourType.WHITE if move.to_.piece.colour_type == ColourType.BLACK else ColourType.BLACK
 
     def undo_move(self) -> None:
-        move = self.move_log.pop()
-        move.from_.piece = move.to_.piece
-        if isinstance(move, PawnMove):
-            if move.promotion_piece is not None:
-                move.from_.piece = move.promotion_piece
-                move.promotion_piece = move.to_.piece
-            move.to_.piece = None
-            move.capture_square.piece = move.captured_piece
-        else:
-            move.to_.piece = move.captured_piece
-        self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
-        # re-assign the correct en-passant square
-        self.en_passant_square = move.previous_en_passant_square
+        try:
+            move = self.move_log.pop()
+            move.from_.piece = move.to_.piece
+            if isinstance(move, PawnMove):
+                if move.promotion_piece is not None:
+                    move.from_.piece = move.promotion_piece
+                    move.promotion_piece = move.to_.piece
+                move.to_.piece = None
+                move.capture_square.piece = move.captured_piece
+            else:
+                move.to_.piece = move.captured_piece
+            self.turn = ColourType.WHITE if move.from_.piece.colour_type == ColourType.WHITE else ColourType.BLACK
+            # re-assign the correct en-passant square
+            self.en_passant_square = move.previous_en_passant_square
+        except IndexError as idx_err:
+            print("No moves to undo!")
 
     def _generate_legal_moves(self) -> None:
         self.valid_moves = self._get_valid_moves()
@@ -238,7 +241,6 @@ class Board:
 
     def _update_en_passant_square(self, move: Move):
         self.en_passant_square = None
-        # todo: isinstance(move, PawnMove)
-        if move.from_.piece.piece_type == PieceType.PAWN and abs(move.to_.rank - move.from_.rank) == 2:
+        if isinstance(move, PawnMove) and abs(move.to_.rank - move.from_.rank) == 2:
             en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
             self.en_passant_square = self.state[en_passant_rank][move.to_.file]
