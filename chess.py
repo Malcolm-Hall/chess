@@ -1,6 +1,7 @@
 from board import Board, read_chess_notation
 from piece import Piece, PieceType
-from move import Move
+from move import Move, PawnMove
+
 
 class Game:
     # [Rank][File]
@@ -41,12 +42,14 @@ class Game:
     def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int) -> bool:
         from_ = self.board.state[from_rank][from_file]
         to_ = self.board.state[to_rank][to_file]
-        move = Move(from_, to_)
         if from_.piece is not None and from_.piece.piece_type == PieceType.PAWN:
+            move = PawnMove(from_, to_)
             if self.board.is_pawn_promotion(to_.rank, from_.piece.colour_type):
             # Todo: allow promotion to piece other than queen
                 self.board.encode_pawn_promotion(move, PieceType.QUEEN)
             if self.board.is_en_passant(to_) and from_.piece.piece_type == PieceType.PAWN:
                 self.board.encode_en_passant(move)
+        else:
+            move = Move(from_, to_)
 
         return self.board.try_move(move)
