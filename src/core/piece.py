@@ -2,11 +2,13 @@ from enum import Enum
 import constants
 
 class ColourType(Enum):
+    """The colour type of a piece"""
     WHITE = 0
     BLACK = 1
 
 
 class PieceType(Enum):
+    """The type of a piece"""
     KING = 0
     QUEEN = 1
     ROOK = 2
@@ -16,9 +18,9 @@ class PieceType(Enum):
 
 
 class Piece:
+    """Represents a chess piece of a given type and colour"""
     piece_type: PieceType
     colour_type: ColourType
-    piece_id: int = 0
     def __init__(self, piece_type: PieceType, colour_type: ColourType):
         self.piece_type = piece_type
         self.colour_type = colour_type
@@ -32,13 +34,14 @@ class Piece:
         return False
 
     @property
-    def type(self) -> int:
+    def type_value(self) -> int:
+        """Returns the type value of the piece. Used as an index for arrays"""
         return self.piece_type.value
 
     @property
-    def colour(self) -> int:
+    def colour_value(self) -> int:
+        """Returns the colour value of the piece. Used as an index for arrays"""
         return self.colour_type.value
-
 
 CHESS_PIECES = {"k": Piece(PieceType.KING, ColourType.WHITE)  , "q": Piece(PieceType.QUEEN, ColourType.WHITE),
                 "r": Piece(PieceType.ROOK, ColourType.WHITE)  , "b": Piece(PieceType.BISHOP, ColourType.WHITE),
@@ -47,4 +50,3 @@ CHESS_PIECES = {"k": Piece(PieceType.KING, ColourType.WHITE)  , "q": Piece(Piece
                 "K": Piece(PieceType.KING, ColourType.BLACK)  , "Q": Piece(PieceType.QUEEN, ColourType.BLACK),
                 "R": Piece(PieceType.ROOK, ColourType.BLACK)  , "B": Piece(PieceType.BISHOP, ColourType.BLACK),
                 "N": Piece(PieceType.KNIGHT, ColourType.BLACK), "P": Piece(PieceType.PAWN, ColourType.BLACK)}
-

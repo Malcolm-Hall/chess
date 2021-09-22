@@ -1,6 +1,6 @@
-from board import Board, read_chess_notation
-from piece import Piece, PieceType
-from move import Move, PawnMove
+from .board import Board, read_chess_notation
+from .piece import Piece, PieceType
+from .move import Move, PawnMove
 
 
 class Game:
@@ -27,8 +27,8 @@ class Game:
         for rank in self.board.state:
             for square in rank:
                 if square.piece is not None:
-                    square.piece.piece_id = len(self.pieces[square.piece.type][square.piece.colour])
-                    self.pieces[square.piece.type][square.piece.colour].append(square.piece)
+                    square.piece.piece_id = len(self.pieces[square.piece.type_value][square.piece.colour_value])
+                    self.pieces[square.piece.type_value][square.piece.colour_value].append(square.piece)
 
     def undo_move(self) -> None:
         # Todo: undo logic involving fullmove and halfmove number

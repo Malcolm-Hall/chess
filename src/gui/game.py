@@ -1,19 +1,9 @@
-import os
-
 import pyglet
 from typing import Union, Optional
-import chess
 from constants import PIECE_STRS, UNICODE_PIECE_SYMBOLS
-from piece import Piece, PieceType, ColourType, CHESS_PIECES
-
-
-class PieceSprite(pyglet.text.Label):
-    def __init__(self, piece: str, x: int, y: int, font_size=35, batch=None, group=None):
-        super().__init__(piece,
-                         x=x, y=y,
-                         font_size=font_size,
-                         batch=batch,
-                         group=group)
+from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
+import core.chess
+from .piece import PieceSprite
 
 
 
@@ -39,7 +29,7 @@ class Main(pyglet.window.Window):
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         super().__init__(self.size, self.size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
-        self.game = chess.Game(fen)
+        self.game = core.chess.Game(fen)
         self.board_sprites = self._board_generator()
         self.piece_sprites = self._piece_generator()
         self.promotion_piece_sprites = self._promotion_piece_generator()
@@ -139,17 +129,8 @@ class Main(pyglet.window.Window):
 
     def brute_force_update(self):
         for rank in self.piece_sprites:
-            for sprite in rank:
-                if sprite is None:
+            for piece in rank:
+                if piece is None:
                     continue
-                sprite.delete()
+                piece.delete()
         self.piece_sprites = self._piece_generator()
-
-
-if __name__ == '__main__':
-    main = Main("rnbqkbnr/pppppppp/PP6/PP6/8/PPPP4/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-    # def update(dt):
-    #     main.on_draw()
-    #
-    # pyglet.clock.schedule_interval(update, 1 / 1.0)
-    pyglet.app.run()

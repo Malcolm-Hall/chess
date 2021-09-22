@@ -1,8 +1,9 @@
 import copy
 from typing import Optional
-from chessExceptions import *
-from piece import PieceType, ColourType, CHESS_PIECES
-from move import Move, PotentialMove, PawnPotentialMove, POTENTIAL_MOVES, Square, PawnMove
+from .chessExceptions import *
+from .piece import PieceType, ColourType, CHESS_PIECES
+from .move import Move, Square, PawnMove
+from .potentialmove import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
 from constants import UNICODE_WHITE_SPACE, FILE_NOTATION, RANK_NOTATION, PIECE_STRS
 
 def read_chess_notation(position: str) -> tuple[int,int]:
@@ -66,7 +67,7 @@ class Board:
 
     # todo: add to PawnMove class or separate out
     def encode_pawn_promotion(self, move: PawnMove, promotion_piece_type: PieceType):
-        piece_str = PIECE_STRS[promotion_piece_type.value][move.from_.piece.colour]
+        piece_str = PIECE_STRS[promotion_piece_type.value][move.from_.piece.colour_value]
         move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_str])
 
     # todo: add to PawnMove class or separate out
@@ -147,7 +148,7 @@ class Board:
 
     def _get_valid_moves_for_square(self, square: Square) -> list[Move]:
         valid_moves = []
-        for potential_move in POTENTIAL_MOVES[square.piece.type]:
+        for potential_move in POTENTIAL_MOVES[square.piece.type_value]:
             # check pawn for en-passant and capture
             if square.piece.piece_type == PieceType.PAWN:
                 valid_moves += self._handle_pawn_moves(square, potential_move)
@@ -188,7 +189,7 @@ class Board:
             if blocking_piece is not None:
                 return []
             # check if double move allowed
-            if abs(potential_move.rank_change[0]) > 1:
+            if abs(potential_move.rank_change) > 1:
                 moved = (move.from_.rank != 1) if move.from_.piece.colour_type == ColourType.WHITE else (move.from_.rank != 6)
                 if moved:
                     return []
