@@ -2,9 +2,6 @@ from typing import Optional
 from .piece import Piece
 from .square import Square
 
-
-
-
 class Move:
     from_: Square
     to_: Square

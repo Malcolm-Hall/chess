@@ -1,4 +1,4 @@
-from .board import Board, read_chess_notation
+from .board import Board, read_chess_notation, is_pawn_promotion
 from .piece import Piece, PieceType
 from .move import Move, PawnMove
 
@@ -46,7 +46,7 @@ class Game:
             return False
         if from_.piece.piece_type == PieceType.PAWN:
             move = PawnMove(from_, to_)
-            if self.board.is_pawn_promotion(to_.rank, from_.piece.colour_type):
+            if is_pawn_promotion(to_.rank, from_.piece.colour_type):
                 self.board.encode_pawn_promotion(move, promotion_piece)
             if self.board.is_en_passant(to_) and from_.piece.piece_type == PieceType.PAWN:
                 self.board.encode_en_passant(move)

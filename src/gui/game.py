@@ -3,6 +3,7 @@ from typing import Union, Optional
 from constants import PIECE_STRS, UNICODE_PIECE_SYMBOLS
 from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
 import core.chess
+from core.board import is_pawn_promotion
 from .piece import PieceSprite
 
 
@@ -59,7 +60,7 @@ class Main(pyglet.window.Window):
                     return
                 (piece_rank, piece_file) = self.selected_squares[0]
                 piece = self.game.board.state[piece_rank][piece_file].piece
-                if piece is not None and piece.piece_type == PieceType.PAWN and not self.auto_queen and self.game.board.is_pawn_promotion(clicked_rank, piece.colour_type):
+                if piece is not None and piece.piece_type == PieceType.PAWN and not self.auto_queen and is_pawn_promotion(clicked_rank, piece.colour_type):
                         if piece.colour_type == ColourType.WHITE:
                             self.white_promotion = True
                         else:

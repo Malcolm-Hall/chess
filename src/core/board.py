@@ -9,9 +9,32 @@ from constants import UNICODE_WHITE_SPACE, FILE_NOTATION, RANK_NOTATION, PIECE_S
 def read_chess_notation(position: str) -> tuple[int,int]:
     return RANK_NOTATION[position[1:2]], FILE_NOTATION[position[:1]]
 
+def get_board_state(board_state_fen: str) -> list[list[Square]]:
+    state = [[Square(rank, file) for file in range(8)] for rank in range(8)]
+    ranks = board_state_fen.split("/")
+    for rank, pieces in enumerate(ranks):
+        file = 0
+        for char in pieces:
+            if char in [str(i) for i in range(1, 9)]:
+                file += int(char)
+            else:
+                piece = copy.deepcopy(CHESS_PIECES[char])
+                state[rank][file].piece = piece
+                file += 1
+    return state
+
+def is_off_board(rank: int, file: int) -> bool:
+    return rank < 0 or rank > 7 or file < 0 or file > 7
+
+def is_pawn_promotion(to_rank: int, pawn_colour: ColourType) -> bool:
+    if pawn_colour == ColourType.WHITE:
+        return to_rank == 7
+    else:
+        return to_rank == 0
+
 class Board:
     # [Rank][File]
-    state: list[list[Square]] = [[None for _ in range(8)] for _ in range(8)]
+    state: list[list[Square]]
     valid_moves: list[Move] = []
     legal_moves: list[Move] = []
     en_passant_square: Optional[Square] = None
@@ -21,7 +44,7 @@ class Board:
     def __init__(self, fen: list[str]):
         fen.reverse()
         board_state_fen = fen.pop()
-        self._set_board_state(board_state_fen)
+        self.state = get_board_state(board_state_fen)
 
         turn_fen = fen.pop()
         self.turn = ColourType.WHITE if turn_fen == "w" else ColourType.BLACK
@@ -41,29 +64,6 @@ class Board:
                 board_str += "|" + (str(square.piece) if square.piece is not None else UNICODE_WHITE_SPACE)
             board_str += "|\n"
         return board_str
-
-    def _set_board_state(self, board_state_fen: str) -> None:
-        ranks = board_state_fen.split("/")
-        for rank, pieces in enumerate(ranks):
-            file = 0
-            for char in pieces:
-                if char in [str(i) for i in range(1, 9)]:
-                    self._setup_blank_squares(rank, file, int(char))
-                    file += int(char)
-                else:
-                    self._setup_square(rank, file, char)
-                    file += 1
-
-    def _setup_blank_squares(self, rank: int, file: int, number: int) -> None:
-        for _ in range(number):
-            self._setup_square(rank, file)
-            file += 1
-
-    def _setup_square(self, rank: int, file: int, piece_fen: str = None) -> None:
-        piece = None
-        if piece_fen is not None:
-            piece = copy.deepcopy(CHESS_PIECES[piece_fen])
-        self.state[rank][file] = Square(rank, file, piece)
 
     # todo: add to PawnMove class or separate out
     def encode_pawn_promotion(self, move: PawnMove, promotion_piece_type: PieceType):
@@ -159,10 +159,10 @@ class Board:
     def _handle_pawn_moves(self, from_square: Square, potential_move: PawnPotentialMove) -> list[PawnMove]:
         rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
         to_rank, to_file = from_square.rank + rank_change, from_square.file + file_change
-        if self._is_off_board(to_rank, to_file):
+        if is_off_board(to_rank, to_file):
             return []
         to_square = self.state[to_rank][to_file]
-        if self.is_pawn_promotion(to_rank, from_square.piece.colour_type):
+        if is_pawn_promotion(to_rank, from_square.piece.colour_type):
             moves = []
             for piece_type in PieceType:
                 if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
@@ -201,7 +201,7 @@ class Board:
         # if infinite range: loop till hit piece or edge of board
         for i in potential_move.range():
             new_rank, new_file = square.rank + i * rank_change, square.file + i * file_change
-            if self._is_off_board(new_rank, new_file):
+            if is_off_board(new_rank, new_file):
                 break
             # check for blocking piece
             blocking_piece = self.state[new_rank][new_file].piece
@@ -230,12 +230,6 @@ class Board:
                 legal_moves.append(move)
             self.undo_move()
         return legal_moves
-
-    def _is_off_board(self, rank: int, file: int) -> bool:
-        return rank < 0 or rank > len(self.state)-1 or file < 0 or file > len(self.state[0])-1
-
-    def is_pawn_promotion(self, to_rank: int, pawn_colour: ColourType) -> bool:
-        return (to_rank == len(self.state)-1 and pawn_colour == ColourType.WHITE) or (to_rank == 0 and pawn_colour == ColourType.BLACK)
 
     def is_en_passant(self, to_square: Square) -> bool:
         return to_square == self.en_passant_square
