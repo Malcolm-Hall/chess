@@ -1,4 +1,4 @@
-## Description
+# ♕♘ Chess
 The standard variant of chess written in Python, using the [Pyglet library][1] for a clean and responsive GUI.
 
 ## Features
