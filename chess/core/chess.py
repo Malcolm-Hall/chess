@@ -18,17 +18,17 @@ class Game:
 
     def setup_from_fen(self, fen: str) -> None:
         # rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-        fen = fen.split()
-        self.fullmove_number = int(fen.pop())
-        self.halfmove_number = int(fen.pop())
-        self.board = Board(fen)
+        fen_split = fen.split()
+        self.fullmove_number = int(fen_split.pop())
+        self.halfmove_number = int(fen_split.pop())
+        self.board = Board(fen_split)
 
-    def _load_pieces(self) -> None:
-        for rank in self.board.state:
-            for square in rank:
-                if square.piece is not None:
-                    square.piece.piece_id = len(self.pieces[square.piece.type_value][square.piece.colour_value])
-                    self.pieces[square.piece.type_value][square.piece.colour_value].append(square.piece)
+    # def _load_pieces(self) -> None:
+    #     for rank in self.board.state:
+    #         for square in rank:
+    #             if square.piece is not None:
+    #                 square.piece.piece_id = len(self.pieces[square.piece.type_value][square.piece.colour_value])
+    #                 self.pieces[square.piece.type_value][square.piece.colour_value].append(square.piece)
 
     def undo_move(self) -> None:
         # Todo: undo logic involving fullmove and halfmove number
@@ -42,6 +42,7 @@ class Game:
     def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int, promotion_piece: PieceType = PieceType.QUEEN) -> bool:
         from_ = self.board.state[from_rank][from_file]
         to_ = self.board.state[to_rank][to_file]
+        move: Move
         if from_.piece is None:
             return False
         if from_.piece.piece_type == PieceType.PAWN:

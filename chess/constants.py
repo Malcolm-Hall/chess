@@ -1,6 +1,6 @@
 
 # [Piece, Colour]                                  WHITE, BLACK
-UNICODE_PIECE_SYMBOLS: list[list[str, str]] = [["\u2654", "\u265A"], # King   |K
+UNICODE_PIECE_SYMBOLS: list[list[str]] = [["\u2654", "\u265A"], # King   |K
                                                ["\u2655", "\u265B"], # Queen  |Q
                                                ["\u2656", "\u265C"], # Rook   |R
                                                ["\u2657", "\u265D"], # Bishop |B
@@ -8,7 +8,7 @@ UNICODE_PIECE_SYMBOLS: list[list[str, str]] = [["\u2654", "\u265A"], # King   |K
                                                ["\u2659", "\u265F"]] # Pawn   |P
 
 # [Piece][Colour]
-PIECE_STRS: list[list[str, str]] = [["k","K"],
+PIECE_STRS: list[list[str]] = [["k","K"],
                                     ["q","Q"],
                                     ["r","R"],
                                     ["b","B"],

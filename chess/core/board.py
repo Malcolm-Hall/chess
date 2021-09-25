@@ -147,7 +147,7 @@ class Board:
         return valid_moves
 
     def _get_valid_moves_for_square(self, square: Square) -> list[Move]:
-        valid_moves = []
+        valid_moves: list[Move] = []
         for potential_move in POTENTIAL_MOVES[square.piece.type_value]:
             # check pawn for en-passant and capture
             if square.piece.piece_type == PieceType.PAWN:

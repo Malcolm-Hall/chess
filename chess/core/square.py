@@ -14,7 +14,7 @@ class Square:
     def __repr__(self) -> str:
         return f"Rank {self.rank} File {self.file} {str(self.piece)}"
 
-    def __eq__(self, other: 'Square') -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Square):
             return (self.rank == other.rank) and (self.file == other.file) and (self.piece == other.piece)
         return False
