@@ -3,7 +3,7 @@ from .piece import Piece, PieceType
 from .move import Move, PawnMove
 
 
-class Game:
+class Chess:
     # [Rank][File]
     board: Board
     # [K,Q,R,B,N,P][WHITE, BLACK][NUMBER]
