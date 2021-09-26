@@ -1,19 +1,19 @@
 
-# [Piece, Colour]                                  WHITE, BLACK
-UNICODE_PIECE_SYMBOLS: list[list[str]] = [["\u2654", "\u265A"], # King   |K
-                                               ["\u2655", "\u265B"], # Queen  |Q
-                                               ["\u2656", "\u265C"], # Rook   |R
-                                               ["\u2657", "\u265D"], # Bishop |B
-                                               ["\u2658", "\u265E"], # Knight |N
-                                               ["\u2659", "\u265F"]] # Pawn   |P
+# [Piece][Colour]                             WHITE, BLACK
+UNICODE_PIECE_SYMBOLS: list[list[str]] = [["\u265A", "\u2654"], # King   |K
+                                          ["\u265B", "\u2655"], # Queen  |Q
+                                          ["\u265C", "\u2656"], # Rook   |R
+                                          ["\u265D", "\u2657"], # Bishop |B
+                                          ["\u265E", "\u2658"], # Knight |N
+                                          ["\u265F", "\u2659"]] # Pawn   |P
 
 # [Piece][Colour]
 PIECE_STRS: list[list[str]] = [["k","K"],
-                                    ["q","Q"],
-                                    ["r","R"],
-                                    ["b","B"],
-                                    ["n","N"],
-                                    ["p","P"]]
+                               ["q","Q"],
+                               ["r","R"],
+                               ["b","B"],
+                               ["n","N"],
+                               ["p","P"]]
 
 # Windows
 # UNICODE_WHITE_SPACE: str = "\u3000"

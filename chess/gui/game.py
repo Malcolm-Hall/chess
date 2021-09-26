@@ -13,7 +13,7 @@ def board_generator(square_size: int, main_batch, board_group) -> list[SquareSpr
     """Generates board sprites of a given square size and assigns the render batch and group"""
     return [SquareSprite(i*square_size, j*square_size,
                             square_size, square_size,
-                            (240, 217, 181) if (i%2==0) != (j%2==0) else (148, 111, 81),
+                            (157, 126, 104) if (i%2==0) != (j%2==0) else (85, 60, 42),
                             main_batch,
                             board_group)
             for i in range(8) for j in range(8)]
@@ -55,7 +55,7 @@ class Game(pyglet.window.Window):
     def on_draw(self):
         self.clear()
         self.main_batch.draw()
-        self.fpsDisplay.draw()
+        # self.fpsDisplay.draw()
         self.promotion_overlay.draw(self.promotion_colour)
         self.promotion_colour = None
 
