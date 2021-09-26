@@ -17,9 +17,9 @@ pip3 install -r requirements.txt
 ```
 
 ## Usage
-To start playing chess run ``main.py`` in the src directory
+To start playing chess run ``main.py`` in the chess package directory
 ```sh
-python3 src/main.py
+python3 chess/main.py
 ```
 To load a position from [FEN notation][2] enter a valid FEN when prompted, otherwise leave blank for a new game of chess.
 
