@@ -6,36 +6,41 @@ from constants import PIECE_STRS, UNICODE_PIECE_SYMBOLS
 from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
 import core.chess
 from core.board import is_pawn_promotion
-from .piece import PieceSprite
+from .sprites import PieceSprite, SquareSprite
 from .layout import Layout
 
-def board_generator(square_size, main_batch, board_group) -> list[pyglet.shapes.Rectangle]:
-    return [pyglet.shapes.Rectangle(x=i*square_size, y=j*square_size,
-                                    width=square_size, height=square_size,
-                                    color=(240, 217, 181) if (i%2==0) != (j%2==0) else (148, 111, 81),
-                                    batch=main_batch,
-                                    group=board_group)
+def board_generator(square_size: int, main_batch, board_group) -> list[SquareSprite]:
+    """Generates board sprites of a given square size and assigns the render batch and group"""
+    return [SquareSprite(i*square_size, j*square_size,
+                            square_size, square_size,
+                            (240, 217, 181) if (i%2==0) != (j%2==0) else (148, 111, 81),
+                            main_batch,
+                            board_group)
             for i in range(8) for j in range(8)]
 
 def piece_generator(board_state: list[list[Square]], layout: Layout, main_batch, pieces_group) -> list[list[Optional[PieceSprite]]]:
+    "Generates piece sprites of a given Layout and assigns the render batch and group"
     return [[(PieceSprite(str(square.piece),
                             file * layout.square_size + layout.piece_offset[0],
                             rank * layout.square_size + layout.piece_offset[1],
-                            font_size=layout.piece_size,
-                            batch=main_batch,
-                            group=pieces_group)
+                            layout.piece_size,
+                            main_batch,
+                            pieces_group)
                 if square.piece is not None else None)
                 for file, square in enumerate(squares)] for rank, squares in enumerate(board_state)]
 
-
 class Game(pyglet.window.Window):
+    """
+    Constructs a game of chess using Pyglet for the GUI. 
+    Use 'pyglet.app.run()' after construction to run the game.
+    """
     auto_queen: bool = False
     layout = Layout(512, 45, (5, 10))
     selected_squares: list[tuple[int, int]] = []
     main_batch = pyglet.graphics.Batch()
     board_group = pyglet.graphics.OrderedGroup(0)
     pieces_group = pyglet.graphics.OrderedGroup(1)
-    board_sprites: list[pyglet.shapes.Rectangle]
+    board_sprites: list[SquareSprite]
     piece_sprites: list[list[Optional[PieceSprite]]]
     promotion_overlay: PromotionOverlay
     promotion_colour: Optional[ColourType] = None

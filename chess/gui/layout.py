@@ -1,5 +1,6 @@
 
 class Layout:
+    """Defines the visual layout of the chess board and pieces."""
     board_size: int
     square_size: int
     piece_size: int
