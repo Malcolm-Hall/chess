@@ -1,3 +1,4 @@
+from .promotion_overlay import PromotionOverlay
 from core.square import Square
 import pyglet
 from typing import Union, Optional
@@ -15,23 +16,6 @@ def board_generator(square_size, main_batch, board_group) -> list[pyglet.shapes.
                                     batch=main_batch,
                                     group=board_group)
             for i in range(8) for j in range(8)]
-
-def promotion_piece_generator(layout: Layout, white_promotion_batch, black_promotion_batch, overlay_group, promotion_group) -> list[Union[PieceSprite, pyglet.shapes.Rectangle]]:
-    promotion_backgrounds = [pyglet.shapes.Rectangle(x=2 * layout.square_size,
-                                                        y=(1 if colour.value else 6) * layout.square_size,
-                                                        width=4 * layout.square_size, height=layout.square_size,
-                                                        color=(100, 100, 200),
-                                                        batch=white_promotion_batch if colour == ColourType.WHITE else black_promotion_batch,
-                                                        group=overlay_group)
-                                for colour in ColourType]
-    promotion_pieces = [PieceSprite(str(piece_symbol),
-                                    (i+2) * layout.square_size + layout.piece_offset[0],
-                                    (1 if colour else 6) * layout.square_size + layout.piece_offset[1],
-                                    font_size=layout.piece_size,
-                                    batch=white_promotion_batch if colour == ColourType.WHITE.value else black_promotion_batch,
-                                    group=promotion_group)
-                        for i, piece_type in enumerate(UNICODE_PIECE_SYMBOLS[1:5]) for colour, piece_symbol in enumerate(piece_type)]
-    return promotion_backgrounds + promotion_pieces
 
 def piece_generator(board_state: list[list[Square]], layout: Layout, main_batch, pieces_group) -> list[list[Optional[PieceSprite]]]:
     return [[(PieceSprite(str(square.piece),
@@ -51,33 +35,24 @@ class Game(pyglet.window.Window):
     main_batch = pyglet.graphics.Batch()
     board_group = pyglet.graphics.OrderedGroup(0)
     pieces_group = pyglet.graphics.OrderedGroup(1)
-    white_promotion_batch = pyglet.graphics.Batch()
-    black_promotion_batch = pyglet.graphics.Batch()
-    overlay_group = pyglet.graphics.OrderedGroup(2)
-    promotion_group = pyglet.graphics.OrderedGroup(3)
     board_sprites: list[pyglet.shapes.Rectangle]
     piece_sprites: list[list[Optional[PieceSprite]]]
-    promotion_piece_sprites: list[PieceSprite]
-    white_promotion: bool = False
-    black_promotion: bool = False
+    promotion_overlay: PromotionOverlay
+    promotion_colour: Optional[ColourType] = None
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         super().__init__(self.layout.board_size, self.layout.board_size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
         self.chess = core.chess.Chess(fen)
         self.board_sprites = board_generator(self.layout.square_size, self.main_batch, self.board_group)
         self.piece_sprites = piece_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
-        self.promotion_piece_sprites = promotion_piece_generator(self.layout, self.white_promotion_batch, self.black_promotion_batch, self.overlay_group, self.promotion_group)
+        self.promotion_overlay = PromotionOverlay(self.layout)
 
     def on_draw(self):
         self.clear()
         self.main_batch.draw()
         self.fpsDisplay.draw()
-        if self.white_promotion:
-            self.white_promotion_batch.draw()
-            self.white_promotion = False
-        elif self.black_promotion:
-            self.black_promotion_batch.draw()
-            self.black_promotion = False
+        self.promotion_overlay.draw(self.promotion_colour)
+        self.promotion_colour = None
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button is pyglet.window.mouse.LEFT:
@@ -94,12 +69,9 @@ class Game(pyglet.window.Window):
                 (piece_rank, piece_file) = self.selected_squares[0]
                 piece = self.chess.board.state[piece_rank][piece_file].piece
                 if piece is not None and piece.piece_type == PieceType.PAWN and not self.auto_queen and is_pawn_promotion(clicked_rank, piece.colour_type):
-                        if piece.colour_type == ColourType.WHITE:
-                            self.white_promotion = True
-                        else:
-                            self.black_promotion = True
-                        self.selected_squares.append((clicked_rank, clicked_file))
-                        return
+                    self.promotion_colour = piece.colour_type
+                    self.selected_squares.append((clicked_rank, clicked_file))
+                    return
             self.selected_squares.append((clicked_rank, clicked_file))
             self.move()
         if button is pyglet.window.mouse.RIGHT:
