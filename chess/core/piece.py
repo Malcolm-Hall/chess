@@ -28,10 +28,10 @@ class Piece:
     def __repr__(self) -> str:
         return constants.UNICODE_PIECE_SYMBOLS[self.piece_type.value][self.colour_type.value]
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Piece):
-            return (self.piece_type.value == other.piece_type.value) and (self.colour_type.value == other.colour_type.value)
-        return False
+            return (self.piece_type == other.piece_type) and (self.colour_type == other.colour_type)
+        return NotImplemented
 
     @property
     def type_value(self) -> int:

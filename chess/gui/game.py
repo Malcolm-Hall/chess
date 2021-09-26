@@ -51,8 +51,9 @@ class Main(pyglet.window.Window):
         if button is pyglet.window.mouse.LEFT:
             clicked_file = int(x / self.size * 8)
             clicked_rank = int(y / self.size * 8)
-            if self.selected_squares == [] and self.piece_sprites[clicked_rank][clicked_file] is not None:
-                self.selected_squares.append((clicked_rank, clicked_file))
+            if self.selected_squares == []:
+                if self.piece_sprites[clicked_rank][clicked_file] is not None:
+                    self.selected_squares.append((clicked_rank, clicked_file))
                 return
             elif len(self.selected_squares) < 2:
                 if self.selected_squares[0] == (clicked_rank, clicked_file):

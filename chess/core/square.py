@@ -17,4 +17,4 @@ class Square:
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Square):
             return (self.rank == other.rank) and (self.file == other.file) and (self.piece == other.piece)
-        return False
+        return NotImplemented

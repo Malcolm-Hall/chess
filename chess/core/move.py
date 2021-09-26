@@ -3,6 +3,7 @@ from .piece import Piece
 from .square import Square
 
 class Move:
+    """Represents a move from a starting Square to an end Square."""
     from_: Square
     to_: Square
     captured_piece: Optional[Piece]
@@ -18,7 +19,7 @@ class Move:
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Move):
             return (self.from_ == other.from_) and (self.to_ == other.to_)
-        return False
+        return NotImplemented
 
 class PawnMove(Move):
     capture_square: Square
@@ -43,4 +44,4 @@ class PawnMove(Move):
     def __eq__(self, other: object) -> bool:
         if isinstance(other, PawnMove):
             return (self.from_ == other.from_) and (self.to_ == other.to_) and (self.promotion_piece == other.promotion_piece)
-        return False
+        return NotImplemented
