@@ -1,6 +1,7 @@
 from .promotion_overlay import PromotionOverlay
 from core.square import Square
 import pyglet
+from pyglet.window import mouse
 from typing import Union, Optional
 from constants import PIECE_STRS, UNICODE_PIECE_SYMBOLS
 from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
@@ -11,23 +12,27 @@ from .layout import Layout
 
 def board_generator(square_size: int, main_batch, board_group) -> list[SquareSprite]:
     """Generates board sprites of a given square size and assigns the render batch and group"""
-    return [SquareSprite(i*square_size, j*square_size,
-                            square_size, square_size,
-                            (157, 126, 104) if (i%2==0) != (j%2==0) else (85, 60, 42),
-                            main_batch,
-                            board_group)
-            for i in range(8) for j in range(8)]
+    return [SquareSprite(i*square_size,
+            j*square_size,
+            square_size,
+            square_size,
+            (157, 126, 104) if (i%2==0) != (j%2==0) else (85, 60, 42),
+            main_batch,
+            board_group)
+        for i in range(8) 
+        for j in range(8)]
 
 def piece_generator(board_state: list[list[Square]], layout: Layout, main_batch, pieces_group) -> list[list[Optional[PieceSprite]]]:
     "Generates piece sprites of a given Layout and assigns the render batch and group"
     return [[(PieceSprite(str(square.piece),
-                            file * layout.square_size + layout.piece_offset[0],
-                            rank * layout.square_size + layout.piece_offset[1],
-                            layout.piece_size,
-                            main_batch,
-                            pieces_group)
-                if square.piece is not None else None)
-                for file, square in enumerate(squares)] for rank, squares in enumerate(board_state)]
+                file * layout.square_size + layout.piece_offset[0],
+                rank * layout.square_size + layout.piece_offset[1],
+                layout.piece_size,
+                main_batch,
+                pieces_group)
+            if square.piece is not None else None)
+        for file, square in enumerate(squares)] 
+        for rank, squares in enumerate(board_state)]
 
 class Game(pyglet.window.Window):
     """
@@ -55,12 +60,12 @@ class Game(pyglet.window.Window):
     def on_draw(self):
         self.clear()
         self.main_batch.draw()
-        # self.fpsDisplay.draw()
+        self.fpsDisplay.draw()
         self.promotion_overlay.draw(self.promotion_colour)
         self.promotion_colour = None
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if button is pyglet.window.mouse.LEFT:
+        if button is mouse.LEFT:
             clicked_file = int(x / self.layout.square_size)
             clicked_rank = int(y / self.layout.square_size)
             if self.selected_squares == []:
@@ -79,7 +84,7 @@ class Game(pyglet.window.Window):
                     return
             self.selected_squares.append((clicked_rank, clicked_file))
             self.move()
-        if button is pyglet.window.mouse.RIGHT:
+        if button is mouse.RIGHT:
             self.chess.undo_move()
             self.brute_force_update()
             print(self.chess.board)
