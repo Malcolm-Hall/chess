@@ -3,7 +3,7 @@ from typing import Optional
 from .chessExceptions import *
 from .piece import PieceType, ColourType, CHESS_PIECES
 from .move import Move, Square, PawnMove
-from .potentialmove import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
+from .potential_moves import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
 from constants import UNICODE_WHITE_SPACE, FILE_NOTATION, RANK_NOTATION, PIECE_STRS
 
 def read_chess_notation(position: str) -> tuple[int,int]:

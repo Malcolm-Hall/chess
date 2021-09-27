@@ -10,7 +10,7 @@ from core.board import is_pawn_promotion
 from .sprites import PieceSprite, SquareSprite
 from .layout import Layout
 
-def board_generator(square_size: int, main_batch, board_group) -> list[SquareSprite]:
+def board_sprites_generator(square_size: int, main_batch, board_group) -> list[SquareSprite]:
     """Generates board sprites of a given square size and assigns the render batch and group"""
     return [SquareSprite(i*square_size,
             j*square_size,
@@ -22,7 +22,7 @@ def board_generator(square_size: int, main_batch, board_group) -> list[SquareSpr
         for i in range(8) 
         for j in range(8)]
 
-def piece_generator(board_state: list[list[Square]], layout: Layout, main_batch, pieces_group) -> list[list[Optional[PieceSprite]]]:
+def piece_sprites_generator(board_state: list[list[Square]], layout: Layout, main_batch, pieces_group) -> list[list[Optional[PieceSprite]]]:
     "Generates piece sprites of a given Layout and assigns the render batch and group"
     return [[(PieceSprite(str(square.piece),
                 file * layout.square_size + layout.piece_offset[0],
@@ -53,8 +53,8 @@ class Game(pyglet.window.Window):
         super().__init__(self.layout.board_size, self.layout.board_size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
         self.chess = core.chess.Chess(fen)
-        self.board_sprites = board_generator(self.layout.square_size, self.main_batch, self.board_group)
-        self.piece_sprites = piece_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
+        self.board_sprites = board_sprites_generator(self.layout.square_size, self.main_batch, self.board_group)
+        self.piece_sprites = piece_sprites_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
         self.promotion_overlay = PromotionOverlay(self.layout)
 
     def on_draw(self):
@@ -111,4 +111,4 @@ class Game(pyglet.window.Window):
                 if piece is None:
                     continue
                 piece.delete()
-        self.piece_sprites = piece_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
+        self.piece_sprites = piece_sprites_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
