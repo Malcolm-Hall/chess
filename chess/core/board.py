@@ -32,6 +32,16 @@ def is_pawn_promotion(to_rank: int, pawn_colour: ColourType) -> bool:
     else:
         return to_rank == 0
 
+def is_en_passant(to_square: Square, en_passant_square: Optional[Square]) -> bool:
+    return to_square == en_passant_square
+
+def is_double_step(from_rank: int, to_rank: int) -> bool:
+    return abs(from_rank - to_rank) == 2
+
+def encode_pawn_promotion(move: PawnMove, promotion_piece_type: PieceType):
+    piece_str = PIECE_STRS[promotion_piece_type.value][move.from_.piece.colour_value]
+    move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_str])
+
 class Board:
     # [Rank][File]
     state: list[list[Square]]
@@ -64,12 +74,7 @@ class Board:
                 board_str += "|" + (str(square.piece) if square.piece is not None else UNICODE_WHITE_SPACE)
             board_str += "|\n"
         return board_str
-
-    # todo: add to PawnMove class or separate out
-    def encode_pawn_promotion(self, move: PawnMove, promotion_piece_type: PieceType):
-        piece_str = PIECE_STRS[promotion_piece_type.value][move.from_.piece.colour_value]
-        move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_str])
-
+    
     # todo: add to PawnMove class or separate out
     def encode_en_passant(self, move: PawnMove) -> None:
         if move.from_.piece.colour_type == ColourType.WHITE:
@@ -79,39 +84,42 @@ class Board:
         move.captured_piece = move.capture_square.piece
 
     def try_move(self, move: Move) -> bool:
-        try:
-            self._check_move_is_legal(move)
+        if self._move_is_legal(move):
             self._make_move(move)
             self.valid_moves = []
             self.legal_moves = []
             return True
-        except IllegalMoveException as exc:
+        else:
             print("Illegal Move")
             return False
 
-    def _check_move_is_legal(self, move: Move) -> None:
-        # generate legal moves
+    def _move_is_legal(self, move: Move) -> bool:
         if self.legal_moves == []:
             self._generate_legal_moves()
-            # Todo: check for checkmate/stalemate
-        # check if the move is legal
-        if move not in self.legal_moves:
-            # print(self.legal_moves)
-            raise IllegalMoveException()
+            # TODO: check for checkmate/stalemate
+        return (move in self.legal_moves)
 
     def _make_move(self, move: Move) -> None:
         # move is assumed to be legal
-        move.previous_en_passant_square = self.en_passant_square
-        self._update_en_passant_square(move)
-        move.to_.piece = move.from_.piece
+        new_en_passant_square = None
         if isinstance(move, PawnMove):
-            if move.promotion_piece is not None:
+            if is_pawn_promotion(move.to_.rank, move.from_.piece.colour_type):
+                assert move.promotion_piece is not None, "A promotion piece is needed for pawn promotion"
                 move.to_.piece = move.promotion_piece
                 move.promotion_piece = move.from_.piece
-            # handle en-passant capture
-            if move.capture_square != move.to_:
+            elif is_en_passant(move.to_, self.en_passant_square):
+                assert move.capture_square != move.to_, "Incorrect en-passant capture square"
                 move.capture_square.piece = None
+            elif is_double_step(move.to_.rank, move.from_.rank):
+                en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
+                new_en_passant_square = self.state[en_passant_rank][move.to_.file]
+        # Update en-passant square
+        move.previous_en_passant_square = self.en_passant_square
+        self.en_passant_square = new_en_passant_square
+        # Update piece positions
+        move.to_.piece = move.from_.piece
         move.from_.piece = None
+        # Mark move as made and update the turn
         self.move_log.append(move)
         self.turn = ColourType.WHITE if move.to_.piece.colour_type == ColourType.BLACK else ColourType.BLACK
 
@@ -120,9 +128,13 @@ class Board:
             move = self.move_log.pop()
             move.from_.piece = move.to_.piece
             if isinstance(move, PawnMove):
-                if move.promotion_piece is not None:
+                if is_pawn_promotion(move.to_.rank, move.to_.piece.colour_type):
+                    assert move.promotion_piece is not None, "No promotion piece to revert"
                     move.from_.piece = move.promotion_piece
                     move.promotion_piece = move.to_.piece
+                elif is_en_passant(move.to_, move.previous_en_passant_square):
+                    # move.capture_square.piece = move.captured_piece
+                    pass
                 move.to_.piece = None
                 move.capture_square.piece = move.captured_piece
             else:
@@ -168,7 +180,7 @@ class Board:
                 if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
                     continue
                 move = PawnMove(from_square, to_square)
-                self.encode_pawn_promotion(move, piece_type)
+                encode_pawn_promotion(move, piece_type)
                 moves += self._check_pawn_move(move, potential_move)
             return moves
         else:
@@ -176,7 +188,7 @@ class Board:
             return self._check_pawn_move(move, potential_move)
 
     def _check_pawn_move(self, move: PawnMove, potential_move: PawnPotentialMove) -> list[PawnMove]:
-        if self.is_en_passant(move.to_):
+        if is_en_passant(move.to_, self.en_passant_square):
             self.encode_en_passant(move)
             return [move]
         # check capture moves make a capture of opponent piece
@@ -230,9 +242,6 @@ class Board:
                 legal_moves.append(move)
             self.undo_move()
         return legal_moves
-
-    def is_en_passant(self, to_square: Square) -> bool:
-        return to_square == self.en_passant_square
 
     def _update_en_passant_square(self, move: Move):
         self.en_passant_square = None

@@ -1,4 +1,4 @@
-from .board import Board, read_chess_notation, is_pawn_promotion
+from .board import Board, read_chess_notation, is_pawn_promotion, is_en_passant
 from .piece import Piece, PieceType
 from .move import Move, PawnMove
 
@@ -6,8 +6,6 @@ from .move import Move, PawnMove
 class Chess:
     # [Rank][File]
     board: Board
-    # [K,Q,R,B,N,P][WHITE, BLACK][NUMBER]
-    pieces: list[list[list[Piece]]] = [[[] for _ in range(2)] for _ in range(6)]
     # State variables
     fullmove_number: int = 1
     halfmove_number: int = 0
@@ -22,13 +20,6 @@ class Chess:
         self.fullmove_number = int(fen_split.pop())
         self.halfmove_number = int(fen_split.pop())
         self.board = Board(fen_split)
-
-    # def _load_pieces(self) -> None:
-    #     for rank in self.board.state:
-    #         for square in rank:
-    #             if square.piece is not None:
-    #                 square.piece.piece_id = len(self.pieces[square.piece.type_value][square.piece.colour_value])
-    #                 self.pieces[square.piece.type_value][square.piece.colour_value].append(square.piece)
 
     def undo_move(self) -> None:
         # Todo: undo logic involving fullmove and halfmove number
@@ -49,7 +40,7 @@ class Chess:
             move = PawnMove(from_, to_)
             if is_pawn_promotion(to_.rank, from_.piece.colour_type):
                 self.board.encode_pawn_promotion(move, promotion_piece)
-            if self.board.is_en_passant(to_) and from_.piece.piece_type == PieceType.PAWN:
+            if is_en_passant(to_, self.board.en_passant_square) and from_.piece.piece_type == PieceType.PAWN:
                 self.board.encode_en_passant(move)
         else:
             move = Move(from_, to_)
