@@ -1,6 +1,5 @@
 import copy
 from typing import Optional
-from .chessExceptions import *
 from .util import is_en_passant
 from .piece import PieceType, ColourType, CHESS_PIECES
 from .move import Move, Square, PawnMove
