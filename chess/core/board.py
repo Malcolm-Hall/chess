@@ -102,6 +102,7 @@ class Board:
     def _make_move(self, move: Move) -> None:
         # move is assumed to be legal
         new_en_passant_square = None
+        move.to_.piece = move.from_.piece
         if isinstance(move, PawnMove):
             if is_pawn_promotion(move.to_.rank, move.from_.piece.colour_type):
                 assert move.promotion_piece is not None, "A promotion piece is needed for pawn promotion"
@@ -114,10 +115,9 @@ class Board:
                 en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
                 new_en_passant_square = self.state[en_passant_rank][move.to_.file]
         # Update en-passant square
-        move.previous_en_passant_square = self.en_passant_square
+        # move.previous_en_passant_square = self.en_passant_square
         self.en_passant_square = new_en_passant_square
         # Update piece positions
-        move.to_.piece = move.from_.piece
         move.from_.piece = None
         # Mark move as made and update the turn
         self.move_log.append(move)
@@ -133,7 +133,6 @@ class Board:
                     move.from_.piece = move.promotion_piece
                     move.promotion_piece = move.to_.piece
                 elif is_en_passant(move.to_, move.previous_en_passant_square):
-                    # move.capture_square.piece = move.captured_piece
                     pass
                 move.to_.piece = None
                 move.capture_square.piece = move.captured_piece
@@ -179,12 +178,12 @@ class Board:
             for piece_type in PieceType:
                 if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
                     continue
-                move = PawnMove(from_square, to_square)
+                move = PawnMove(from_square, to_square, self.en_passant_square)
                 encode_pawn_promotion(move, piece_type)
                 moves += self._check_pawn_move(move, potential_move)
             return moves
         else:
-            move = PawnMove(from_square, to_square)
+            move = PawnMove(from_square, to_square, self.en_passant_square)
             return self._check_pawn_move(move, potential_move)
 
     def _check_pawn_move(self, move: PawnMove, potential_move: PawnPotentialMove) -> list[PawnMove]:
@@ -201,7 +200,7 @@ class Board:
             if blocking_piece is not None:
                 return []
             # check if double move allowed
-            if abs(potential_move.rank_change) > 1:
+            if is_double_step(move.from_.rank, move.to_.rank):
                 moved = (move.from_.rank != 1) if move.from_.piece.colour_type == ColourType.WHITE else (move.from_.rank != 6)
                 if moved:
                     return []
@@ -221,7 +220,7 @@ class Board:
                 # break immediately if same ColourType
                 break
             new_square = self.state[new_rank][new_file]
-            valid_moves.append(Move(square, new_square))
+            valid_moves.append(Move(square, new_square, self.en_passant_square))
             if blocking_piece is not None and blocking_piece.colour_type != square.piece.colour_type:
                 # break after appending the move if opposite ColourType
                 break

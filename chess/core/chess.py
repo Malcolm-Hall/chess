@@ -1,4 +1,4 @@
-from .board import Board, read_chess_notation, is_pawn_promotion, is_en_passant
+from .board import Board, read_chess_notation, is_pawn_promotion, is_en_passant, encode_pawn_promotion
 from .piece import Piece, PieceType
 from .move import Move, PawnMove
 
@@ -37,12 +37,12 @@ class Chess:
         if from_.piece is None:
             return False
         if from_.piece.piece_type == PieceType.PAWN:
-            move = PawnMove(from_, to_)
+            move = PawnMove(from_, to_, self.board.en_passant_square)
             if is_pawn_promotion(to_.rank, from_.piece.colour_type):
-                self.board.encode_pawn_promotion(move, promotion_piece)
+                encode_pawn_promotion(move, promotion_piece)
             if is_en_passant(to_, self.board.en_passant_square) and from_.piece.piece_type == PieceType.PAWN:
                 self.board.encode_en_passant(move)
         else:
-            move = Move(from_, to_)
+            move = Move(from_, to_, self.board.en_passant_square)
 
         return self.board.try_move(move)

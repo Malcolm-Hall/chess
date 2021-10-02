@@ -8,9 +8,10 @@ class Move:
     to_: Square
     captured_piece: Optional[Piece]
     previous_en_passant_square: Optional[Square]
-    def __init__(self, from_: Square, to_: Square):
+    def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square]):
         self.from_ = from_
         self.to_ = to_
+        self.previous_en_passant_square = previous_en_passant_square
         self.captured_piece = to_.piece
 
     def __repr__(self) -> str:
@@ -24,8 +25,8 @@ class Move:
 class PawnMove(Move):
     capture_square: Square
     promotion_piece: Optional[Piece]
-    def __init__(self, from_: Square, to_: Square, capture_square: Square = None, promotion_piece: Piece = None):
-        super().__init__(from_, to_)
+    def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square], capture_square: Square = None, promotion_piece: Piece = None):
+        super().__init__(from_, to_, previous_en_passant_square)
         self.promotion_piece = promotion_piece
         if capture_square is None:
             self.capture_square = to_
