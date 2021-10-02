@@ -1,6 +1,7 @@
 import copy
 from typing import Optional
 from .chessExceptions import *
+from .util import is_en_passant
 from .piece import PieceType, ColourType, CHESS_PIECES
 from .move import Move, Square, PawnMove
 from .potential_moves import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
@@ -31,9 +32,6 @@ def is_pawn_promotion(to_rank: int, pawn_colour: ColourType) -> bool:
         return to_rank == 7
     else:
         return to_rank == 0
-
-def is_en_passant(to_square: Square, en_passant_square: Optional[Square]) -> bool:
-    return to_square == en_passant_square
 
 def is_double_step(from_rank: int, to_rank: int) -> bool:
     return abs(from_rank - to_rank) == 2

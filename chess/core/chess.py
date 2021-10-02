@@ -1,4 +1,5 @@
-from .board import Board, read_chess_notation, is_pawn_promotion, is_en_passant, encode_pawn_promotion
+from .util import is_en_passant
+from .board import Board, read_chess_notation, is_pawn_promotion, encode_pawn_promotion
 from .piece import Piece, PieceType
 from .move import Move, PawnMove
 
