@@ -35,9 +35,15 @@ def is_pawn_promotion(to_rank: int, pawn_colour: ColourType) -> bool:
 def is_double_step(from_rank: int, to_rank: int) -> bool:
     return abs(from_rank - to_rank) == 2
 
-def encode_pawn_promotion(move: PawnMove, promotion_piece_type: PieceType):
+def encode_pawn_promotion(move: PawnMove, promotion_piece_type: PieceType) -> None:
     piece_str = PIECE_STRS[promotion_piece_type.value][move.from_.piece.colour_value]
     move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_str])
+
+def en_passant_capture_rank(colour: ColourType) -> int:
+    if colour == ColourType.WHITE:
+        return 4
+    else:
+        return 3
 
 class Board:
     # [Rank][File]
@@ -123,17 +129,24 @@ class Board:
     def undo_move(self) -> None:
         try:
             move = self.move_log.pop()
-            move.from_.piece = move.to_.piece
+            # move.from_.piece = move.to_.piece
             if isinstance(move, PawnMove):
                 if is_pawn_promotion(move.to_.rank, move.to_.piece.colour_type):
                     assert move.promotion_piece is not None, "No promotion piece to revert"
                     move.from_.piece = move.promotion_piece
                     move.promotion_piece = move.to_.piece
+                    move.to_.piece = move.captured_piece
                 elif is_en_passant(move.to_, move.previous_en_passant_square):
-                    pass
-                move.to_.piece = None
-                move.capture_square.piece = move.captured_piece
+                    move.from_.piece = move.to_.piece
+                    capture_rank = en_passant_capture_rank(move.from_.piece.colour_type)
+                    capture_square = self.state[capture_rank][move.to_.file]
+                    capture_square.piece = move.captured_piece
+                    move.to_.piece = None
+                else:
+                    move.from_.piece = move.to_.piece
+                    move.to_.piece = move.captured_piece
             else:
+                move.from_.piece = move.to_.piece
                 move.to_.piece = move.captured_piece
             self.turn = ColourType.WHITE if move.from_.piece.colour_type == ColourType.WHITE else ColourType.BLACK
             # re-assign the correct en-passant square
