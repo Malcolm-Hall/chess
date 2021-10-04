@@ -36,16 +36,26 @@ def is_double_step(from_rank: int, to_rank: int) -> bool:
     return abs(from_rank - to_rank) == 2
 
 def encode_pawn_promotion(move: PawnMove, promotion_piece_type: PieceType) -> None:
-    piece_str = PIECE_STRS[promotion_piece_type.value][move.moved_piece.colour_value]
-    move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_str])
+    piece_string = PIECE_STRS[promotion_piece_type.value][move.moved_piece.colour_value]
+    move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_string])
 
 def en_passant_capture_rank(colour: ColourType) -> int:
+    """
+    The rank in which en-passant capture occurs given the colour of the capturing piece.
+    White captures black on rank 4
+    Black captures white on rank 3
+    """
     if colour == ColourType.WHITE:
         return 4
     else:
         return 3
 
 def en_passant_square_rank(colour: ColourType) -> int:
+    """
+    The rank in which the next en-passant square exists given the colour of the moving piece.
+    White double-stepping produces an en-passant square on rank 2
+    Black double-stepping produces an en-passant square on rank 5
+    """
     if colour == ColourType.WHITE:
         return 2
     else:

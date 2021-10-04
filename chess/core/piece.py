@@ -1,5 +1,5 @@
 from enum import Enum
-import constants
+from constants import piece_str, UNICODE_PIECE_SYMBOLS
 
 class ColourType(Enum):
     """The colour type of a piece"""
@@ -26,7 +26,7 @@ class Piece:
         self.colour_type = colour_type
 
     def __repr__(self) -> str:
-        return constants.UNICODE_PIECE_SYMBOLS[self.piece_type.value][self.colour_type.value]
+        return UNICODE_PIECE_SYMBOLS[self.piece_type.value][self.colour_type.value]
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Piece):
@@ -43,10 +43,10 @@ class Piece:
         """Returns the colour value of the piece. Used as an index for arrays"""
         return self.colour_type.value
 
-CHESS_PIECES = {"k": Piece(PieceType.KING, ColourType.WHITE)  , "q": Piece(PieceType.QUEEN, ColourType.WHITE),
-                "r": Piece(PieceType.ROOK, ColourType.WHITE)  , "b": Piece(PieceType.BISHOP, ColourType.WHITE),
-                "n": Piece(PieceType.KNIGHT, ColourType.WHITE), "p": Piece(PieceType.PAWN, ColourType.WHITE),
+CHESS_PIECES: dict[piece_str, Piece] = {"k": Piece(PieceType.KING, ColourType.WHITE)  , "q": Piece(PieceType.QUEEN, ColourType.WHITE),
+                                        "r": Piece(PieceType.ROOK, ColourType.WHITE)  , "b": Piece(PieceType.BISHOP, ColourType.WHITE),
+                                        "n": Piece(PieceType.KNIGHT, ColourType.WHITE), "p": Piece(PieceType.PAWN, ColourType.WHITE),
 
-                "K": Piece(PieceType.KING, ColourType.BLACK)  , "Q": Piece(PieceType.QUEEN, ColourType.BLACK),
-                "R": Piece(PieceType.ROOK, ColourType.BLACK)  , "B": Piece(PieceType.BISHOP, ColourType.BLACK),
-                "N": Piece(PieceType.KNIGHT, ColourType.BLACK), "P": Piece(PieceType.PAWN, ColourType.BLACK)}
+                                        "K": Piece(PieceType.KING, ColourType.BLACK)  , "Q": Piece(PieceType.QUEEN, ColourType.BLACK),
+                                        "R": Piece(PieceType.ROOK, ColourType.BLACK)  , "B": Piece(PieceType.BISHOP, ColourType.BLACK),
+                                        "N": Piece(PieceType.KNIGHT, ColourType.BLACK), "P": Piece(PieceType.PAWN, ColourType.BLACK)}
