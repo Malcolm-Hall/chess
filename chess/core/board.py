@@ -36,7 +36,7 @@ def is_double_step(from_rank: int, to_rank: int) -> bool:
     return abs(from_rank - to_rank) == 2
 
 def encode_pawn_promotion(move: PawnMove, promotion_piece_type: PieceType) -> None:
-    piece_str = PIECE_STRS[promotion_piece_type.value][move.from_.piece.colour_value]
+    piece_str = PIECE_STRS[promotion_piece_type.value][move.moved_piece.colour_value]
     move.promotion_piece = copy.deepcopy(CHESS_PIECES[piece_str])
 
 def en_passant_capture_rank(colour: ColourType) -> int:
@@ -44,6 +44,12 @@ def en_passant_capture_rank(colour: ColourType) -> int:
         return 4
     else:
         return 3
+
+def en_passant_square_rank(colour: ColourType) -> int:
+    if colour == ColourType.WHITE:
+        return 2
+    else:
+        return 5
 
 class Board:
     # [Rank][File]
@@ -80,7 +86,7 @@ class Board:
     
     # todo: add to PawnMove class or separate out
     def encode_en_passant(self, move: PawnMove) -> None:
-        if move.from_.piece.colour_type == ColourType.WHITE:
+        if move.moved_piece.colour_type == ColourType.WHITE:
             move.capture_square = self.state[move.to_.rank-1][move.to_.file]
         else:
             move.capture_square = self.state[move.to_.rank+1][move.to_.file]
@@ -104,55 +110,59 @@ class Board:
 
     def _make_move(self, move: Move) -> None:
         # move is assumed to be legal
-        new_en_passant_square = None
-        move.to_.piece = move.from_.piece
         if isinstance(move, PawnMove):
-            if is_pawn_promotion(move.to_.rank, move.from_.piece.colour_type):
-                assert move.promotion_piece is not None, "A promotion piece is needed for pawn promotion"
+            if is_pawn_promotion(move.to_.rank, move.moved_piece.colour_type):
                 move.to_.piece = move.promotion_piece
-                move.promotion_piece = move.from_.piece
+                move.from_.piece = None
             elif is_en_passant(move.to_, self.en_passant_square):
-                assert move.capture_square != move.to_, "Incorrect en-passant capture square"
-                move.capture_square.piece = None
-            elif is_double_step(move.to_.rank, move.from_.rank):
-                en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
-                new_en_passant_square = self.state[en_passant_rank][move.to_.file]
+                move.to_.piece = move.moved_piece
+                capture_rank = en_passant_capture_rank(move.moved_piece.colour_type)
+                capture_square = self.state[capture_rank][move.to_.file]
+                capture_square.piece = None
+                move.from_.piece = None
+            else:
+                move.to_.piece = move.moved_piece
+                move.from_.piece = None
+        else:
+            move.to_.piece = move.moved_piece
+            move.from_.piece = None
         # Update en-passant square
-        # move.previous_en_passant_square = self.en_passant_square
-        self.en_passant_square = new_en_passant_square
-        # Update piece positions
-        move.from_.piece = None
+        if isinstance(move, PawnMove) and is_double_step(move.to_.rank, move.from_.rank):
+                en_passant_rank = en_passant_square_rank(move.moved_piece.colour_type)
+                self.en_passant_square = self.state[en_passant_rank][move.to_.file]
+        else:
+            self.en_passant_square = None
         # Mark move as made and update the turn
         self.move_log.append(move)
-        self.turn = ColourType.WHITE if move.to_.piece.colour_type == ColourType.BLACK else ColourType.BLACK
+        self.turn = ColourType.WHITE if move.moved_piece.colour_type == ColourType.BLACK else ColourType.BLACK
 
     def undo_move(self) -> None:
         try:
             move = self.move_log.pop()
-            # move.from_.piece = move.to_.piece
+        except IndexError as idx_err:
+            print("No moves to undo!")
+        else:
             if isinstance(move, PawnMove):
-                if is_pawn_promotion(move.to_.rank, move.to_.piece.colour_type):
-                    assert move.promotion_piece is not None, "No promotion piece to revert"
-                    move.from_.piece = move.promotion_piece
-                    move.promotion_piece = move.to_.piece
+                if is_pawn_promotion(move.to_.rank, move.moved_piece.colour_type):
+                    move.from_.piece = move.moved_piece
                     move.to_.piece = move.captured_piece
                 elif is_en_passant(move.to_, move.previous_en_passant_square):
-                    move.from_.piece = move.to_.piece
-                    capture_rank = en_passant_capture_rank(move.from_.piece.colour_type)
+                    move.from_.piece = move.moved_piece
+                    capture_rank = en_passant_capture_rank(move.moved_piece.colour_type)
                     capture_square = self.state[capture_rank][move.to_.file]
                     capture_square.piece = move.captured_piece
                     move.to_.piece = None
                 else:
-                    move.from_.piece = move.to_.piece
+                    move.from_.piece = move.moved_piece
                     move.to_.piece = move.captured_piece
             else:
-                move.from_.piece = move.to_.piece
+                move.from_.piece = move.moved_piece
                 move.to_.piece = move.captured_piece
-            self.turn = ColourType.WHITE if move.from_.piece.colour_type == ColourType.WHITE else ColourType.BLACK
-            # re-assign the correct en-passant square
+            # Revert the en-passant square
             self.en_passant_square = move.previous_en_passant_square
-        except IndexError as idx_err:
-            print("No moves to undo!")
+            # Update the turn
+            self.turn = ColourType.WHITE if move.moved_piece.colour_type == ColourType.WHITE else ColourType.BLACK
+
 
     def _generate_legal_moves(self) -> None:
         self.valid_moves = self._get_valid_moves()
@@ -211,7 +221,7 @@ class Board:
                 return []
             # check if double move allowed
             if is_double_step(move.from_.rank, move.to_.rank):
-                moved = (move.from_.rank != 1) if move.from_.piece.colour_type == ColourType.WHITE else (move.from_.rank != 6)
+                moved = (move.from_.rank != 1) if move.moved_piece.colour_type == ColourType.WHITE else (move.from_.rank != 6)
                 if moved:
                     return []
         return [move]
@@ -251,9 +261,3 @@ class Board:
                 legal_moves.append(move)
             self.undo_move()
         return legal_moves
-
-    def _update_en_passant_square(self, move: Move):
-        self.en_passant_square = None
-        if isinstance(move, PawnMove) and abs(move.to_.rank - move.from_.rank) == 2:
-            en_passant_rank = move.to_.rank - 1 if move.from_.piece.colour_type == ColourType.WHITE else move.to_.rank + 1
-            self.en_passant_square = self.state[en_passant_rank][move.to_.file]

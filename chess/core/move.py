@@ -7,13 +7,15 @@ class Move:
     """Represents a move from a starting Square to an end Square."""
     from_: Square
     to_: Square
-    previous_en_passant_square: Optional[Square]
+    moved_piece: Piece
     captured_piece: Optional[Piece]
+    previous_en_passant_square: Optional[Square]
     def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square]):
         self.from_ = from_
         self.to_ = to_
-        self.previous_en_passant_square = previous_en_passant_square
+        self.moved_piece = from_.piece
         self.captured_piece = to_.piece
+        self.previous_en_passant_square = previous_en_passant_square
 
     def __repr__(self) -> str:
         return f"From {str(self.from_)} To {str(self.to_)}\n"
