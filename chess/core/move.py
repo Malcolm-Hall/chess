@@ -1,7 +1,7 @@
 from typing import Optional
-from .util import is_en_passant
-from .piece import Piece
-from .square import Square
+from core.util import is_en_passant
+from core.piece import Piece
+from core.square import Square
 
 class Move:
     """Represents a move from a starting Square to an end Square."""

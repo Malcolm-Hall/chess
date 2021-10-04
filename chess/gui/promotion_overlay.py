@@ -1,9 +1,9 @@
 import pyglet
 from typing import Union, Optional
 from constants import UNICODE_PIECE_SYMBOLS
-from .sprites import PieceSprite, SquareSprite
-from .layout import Layout
 from core.piece import ColourType
+from gui.sprites import PieceSprite, SquareSprite
+from gui.layout import Layout
 
 PromotionSprites = Union[PieceSprite, SquareSprite]
 

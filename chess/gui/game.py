@@ -1,14 +1,14 @@
-from .promotion_overlay import PromotionOverlay
-from core.square import Square
+from typing import Union, Optional
 import pyglet
 from pyglet.window import mouse
-from typing import Union, Optional
 from constants import PIECE_STRS, UNICODE_PIECE_SYMBOLS
-from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
 import core.chess
 from core.board import is_pawn_promotion
-from .sprites import PieceSprite, SquareSprite
-from .layout import Layout
+from core.square import Square
+from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
+from gui.promotion_overlay import PromotionOverlay
+from gui.sprites import PieceSprite, SquareSprite
+from gui.layout import Layout
 
 def board_sprites_generator(square_size: int, main_batch, board_group) -> list[SquareSprite]:
     """Generates board sprites of a given square size and assigns the render batch and group"""

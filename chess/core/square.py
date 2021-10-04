@@ -1,5 +1,5 @@
 from typing import Optional
-from .piece import Piece
+from core.piece import Piece
 
 class Square:
     """Represents the square of a chess board of a given rank and file."""

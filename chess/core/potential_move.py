@@ -1,6 +1,6 @@
 from typing import  Iterator
 from itertools import permutations, product
-from .piece import ColourType
+from core.piece import ColourType
 
 class PotentialMove():
     rank_change: int

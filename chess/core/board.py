@@ -1,10 +1,10 @@
 import copy
 from typing import Optional
-from .util import is_en_passant
-from .piece import PieceType, ColourType, CHESS_PIECES
-from .move import Move, Square, PawnMove
-from .potential_move import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
 from constants import UNICODE_WHITE_SPACE, FILE_NOTATION, RANK_NOTATION, PIECE_STRS
+from core.util import is_en_passant
+from core.piece import PieceType, ColourType, CHESS_PIECES
+from core.move import Move, Square, PawnMove
+from core.potential_move import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
 
 def read_chess_notation(position: str) -> tuple[int,int]:
     return RANK_NOTATION[position[1:2]], FILE_NOTATION[position[:1]]

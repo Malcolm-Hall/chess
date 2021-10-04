@@ -1,7 +1,7 @@
-from .util import is_en_passant
-from .board import Board, read_chess_notation, is_pawn_promotion, encode_pawn_promotion
-from .piece import Piece, PieceType
-from .move import Move, PawnMove
+from core.util import is_en_passant
+from core.board import Board, read_chess_notation, is_pawn_promotion, encode_pawn_promotion
+from core.piece import PieceType
+from core.move import Move, PawnMove
 
 
 class Chess:
