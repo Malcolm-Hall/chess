@@ -15,11 +15,9 @@ class PotentialMove():
         return rank_change, self.file_change
     
     def range(self) -> Iterator[int]:
-        output = 1
-        yield output
+        yield 1
 
 class SlidingPotentialMove(PotentialMove):
-
     def range(self) -> Iterator[int]:
         output = 1
         while True:
@@ -32,6 +30,11 @@ class PawnPotentialMove(PotentialMove):
     def __init__(self, rank_change: int, file_change: int, capture: bool = False):
         super().__init__(rank_change, file_change)
         self.capture = capture
+    
+    def range(self) -> Iterator[int]:
+        yield 1
+        if not self.capture:
+            yield 2
 
 
 def generate_sliding_moves():
@@ -71,7 +74,7 @@ def generate_knight_moves():
 
 def generate_pawn_moves():
     PPM = PawnPotentialMove
-    return [PPM(1,0), PPM(2,0), PPM(1,-1,True), PPM(1,1,True)]
+    return [PPM(1,0), PPM(1,-1,True), PPM(1,1,True)]
 
 sliding_moves = generate_sliding_moves()
 knight_moves = generate_knight_moves()

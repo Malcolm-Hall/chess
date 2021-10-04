@@ -3,7 +3,7 @@ from typing import Optional
 from .util import is_en_passant
 from .piece import PieceType, ColourType, CHESS_PIECES
 from .move import Move, Square, PawnMove
-from .potential_moves import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
+from .potential_move import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
 from constants import UNICODE_WHITE_SPACE, FILE_NOTATION, RANK_NOTATION, PIECE_STRS
 
 def read_chess_notation(position: str) -> tuple[int,int]:
@@ -100,6 +100,9 @@ class Board:
             return True
         else:
             print("Illegal Move")
+            # TODO: fix bug where can get stuck after inputing weird moves/ undoing moves
+            # Regenerate legal moves as a temp fix
+            self.legal_moves = []
             return False
 
     def _move_is_legal(self, move: Move) -> bool:
@@ -188,28 +191,31 @@ class Board:
         return valid_moves
 
     def _handle_pawn_moves(self, from_square: Square, potential_move: PawnPotentialMove) -> list[PawnMove]:
+        valid_moves = []
         rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
-        to_rank, to_file = from_square.rank + rank_change, from_square.file + file_change
-        if is_off_board(to_rank, to_file):
-            return []
-        to_square = self.state[to_rank][to_file]
-        if is_pawn_promotion(to_rank, from_square.piece.colour_type):
-            moves = []
-            for piece_type in PieceType:
-                if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
-                    continue
+        # loop till off board, hit piece or max range
+        for i in potential_move.range():
+            to_rank, to_file = from_square.rank + i * rank_change, from_square.file + i * file_change
+            if is_off_board(to_rank, to_file):
+                break
+            to_square = self.state[to_rank][to_file]
+            if is_pawn_promotion(to_rank, from_square.piece.colour_type):
+                for piece_type in PieceType:
+                    if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
+                        continue
+                    move = PawnMove(from_square, to_square, self.en_passant_square)
+                    encode_pawn_promotion(move, piece_type)
+                    valid_moves += self._check_pawn_move(move, potential_move)
+            elif is_en_passant(to_square, self.en_passant_square):
                 move = PawnMove(from_square, to_square, self.en_passant_square)
-                encode_pawn_promotion(move, piece_type)
-                moves += self._check_pawn_move(move, potential_move)
-            return moves
-        else:
-            move = PawnMove(from_square, to_square, self.en_passant_square)
-            return self._check_pawn_move(move, potential_move)
+                self.encode_en_passant(move)
+                valid_moves += self._check_pawn_move(move, potential_move)
+            else:
+                move = PawnMove(from_square, to_square, self.en_passant_square)
+                valid_moves += self._check_pawn_move(move, potential_move)
+        return valid_moves
 
     def _check_pawn_move(self, move: PawnMove, potential_move: PawnPotentialMove) -> list[PawnMove]:
-        if is_en_passant(move.to_, self.en_passant_square):
-            self.encode_en_passant(move)
-            return [move]
         # check capture moves make a capture of opponent piece
         if potential_move.capture and (move.captured_piece is None or move.captured_piece.colour_type == self.turn):
                 return []
@@ -229,7 +235,7 @@ class Board:
     def _handle_non_pawn_moves(self, square: Square, potential_move: PotentialMove) -> list[Move]:
         valid_moves = []
         rank_change, file_change = potential_move.get_rank_file_change(square.piece.colour_type)
-        # if infinite range: loop till hit piece or edge of board
+        # loop till off board, hit piece or max range
         for i in potential_move.range():
             new_rank, new_file = square.rank + i * rank_change, square.file + i * file_change
             if is_off_board(new_rank, new_file):
