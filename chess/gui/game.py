@@ -78,7 +78,7 @@ class Game(pyglet.window.Window):
                     return
                 (piece_rank, piece_file) = self.selected_squares[0]
                 piece = self.chess.board.state[piece_rank][piece_file].piece
-                if piece is not None and piece.piece_type == PieceType.PAWN and not self.auto_queen and is_pawn_promotion(clicked_rank, piece.colour_type):
+                if piece is not None and not self.auto_queen and is_pawn_promotion(clicked_rank, piece):
                     self.promotion_colour = piece.colour_type
                     self.selected_squares.append((clicked_rank, clicked_file))
                     return
