@@ -2,7 +2,7 @@ import copy
 from typing import Optional
 from constants import UNICODE_WHITE_SPACE, FILE_NOTATION, RANK_NOTATION, PIECE_STRS
 from core.util import is_en_passant
-from core.piece import PieceType, ColourType, CHESS_PIECES
+from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
 from core.move import Move, Square, PawnMove
 from core.potential_move import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
 
@@ -34,6 +34,16 @@ def is_pawn_promotion(to_rank: int, pawn_colour: ColourType) -> bool:
 
 def is_double_step(from_rank: int, to_rank: int) -> bool:
     return abs(from_rank - to_rank) == 2
+
+def pawn_has_moved(from_rank: int, colour: ColourType) -> bool:
+    """
+    Returns whether a pawn of a given colour has moved from the starting rank. 
+    Used to determine if a double-step move is allowed.
+    """
+    if colour == ColourType.WHITE:
+        return from_rank != 1
+    else:
+        return from_rank != 6
 
 def encode_pawn_promotion(move: PawnMove, promotion_piece_type: PieceType) -> None:
     piece_string = PIECE_STRS[promotion_piece_type.value][move.moved_piece.colour_value]
@@ -94,13 +104,6 @@ class Board:
             board_str += "|\n"
         return board_str
     
-    # todo: add to PawnMove class or separate out
-    def encode_en_passant(self, move: PawnMove) -> None:
-        if move.moved_piece.colour_type == ColourType.WHITE:
-            move.capture_square = self.state[move.to_.rank-1][move.to_.file]
-        else:
-            move.capture_square = self.state[move.to_.rank+1][move.to_.file]
-        move.captured_piece = move.capture_square.piece
 
     def try_move(self, move: Move) -> bool:
         if self._move_is_legal(move):
@@ -209,55 +212,50 @@ class Board:
             if is_off_board(to_rank, to_file):
                 break
             to_square = self.state[to_rank][to_file]
+            if is_en_passant(to_square, self.en_passant_square):
+                captured_piece = self.get_en_passant_captured_piece(from_square.piece.colour_type)
+            else:
+                captured_piece = to_square.piece
+            # capture moves must make a capture
+            if potential_move.capture and (captured_piece is None or captured_piece.colour_type == self.turn):
+                break
+            # non-capture moves can't make a capture
+            if not potential_move.capture and captured_piece is not None:
+                break
+            # can't double-step if pawn has moved
+            if is_double_step(from_square.rank, to_rank) and pawn_has_moved(from_square.rank, from_square.piece.colour_type):
+                break
+
             if is_pawn_promotion(to_rank, from_square.piece.colour_type):
                 for piece_type in PieceType:
                     if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
                         continue
                     move = PawnMove(from_square, to_square, self.en_passant_square)
                     encode_pawn_promotion(move, piece_type)
-                    valid_moves += self._check_pawn_move(move, potential_move)
-            elif is_en_passant(to_square, self.en_passant_square):
-                move = PawnMove(from_square, to_square, self.en_passant_square)
-                self.encode_en_passant(move)
-                valid_moves += self._check_pawn_move(move, potential_move)
+                    valid_moves.append(move)
             else:
                 move = PawnMove(from_square, to_square, self.en_passant_square)
-                valid_moves += self._check_pawn_move(move, potential_move)
+                move.captured_piece = captured_piece
+                valid_moves.append(move)
+
         return valid_moves
 
-    def _check_pawn_move(self, move: PawnMove, potential_move: PawnPotentialMove) -> list[PawnMove]:
-        # check capture moves make a capture of opponent piece
-        if potential_move.capture and (move.captured_piece is None or move.captured_piece.colour_type == self.turn):
-                return []
-        # non-capture moves
-        if not potential_move.capture:
-            # check for blocking piece
-            blocking_piece = move.to_.piece
-            if blocking_piece is not None:
-                return []
-            # check if double move allowed
-            if is_double_step(move.from_.rank, move.to_.rank):
-                moved = (move.from_.rank != 1) if move.moved_piece.colour_type == ColourType.WHITE else (move.from_.rank != 6)
-                if moved:
-                    return []
-        return [move]
-
-    def _handle_non_pawn_moves(self, square: Square, potential_move: PotentialMove) -> list[Move]:
+    def _handle_non_pawn_moves(self, from_square: Square, potential_move: PotentialMove) -> list[Move]:
         valid_moves = []
-        rank_change, file_change = potential_move.get_rank_file_change(square.piece.colour_type)
+        rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
         # loop till off board, hit piece or max range
         for i in potential_move.range():
-            new_rank, new_file = square.rank + i * rank_change, square.file + i * file_change
-            if is_off_board(new_rank, new_file):
+            to_rank, to_file = from_square.rank + i * rank_change, from_square.file + i * file_change
+            if is_off_board(to_rank, to_file):
                 break
             # check for blocking piece
-            blocking_piece = self.state[new_rank][new_file].piece
-            if blocking_piece is not None and blocking_piece.colour_type == square.piece.colour_type:
-                # break immediately if same ColourType
+            to_square = self.state[to_rank][to_file]
+            blocking_piece = to_square.piece
+            # can't capture piece of same ColourType
+            if blocking_piece is not None and blocking_piece.colour_type == from_square.piece.colour_type:
                 break
-            new_square = self.state[new_rank][new_file]
-            valid_moves.append(Move(square, new_square, self.en_passant_square))
-            if blocking_piece is not None and blocking_piece.colour_type != square.piece.colour_type:
+            valid_moves.append(Move(from_square, to_square, self.en_passant_square))
+            if blocking_piece is not None and blocking_piece.colour_type != from_square.piece.colour_type:
                 # break after appending the move if opposite ColourType
                 break
         return valid_moves
@@ -277,3 +275,18 @@ class Board:
                 legal_moves.append(move)
             self.undo_move()
         return legal_moves
+
+    def get_en_passant_captured_piece(self, colour: ColourType) -> Optional[Piece]:
+        """Returns the piece to be captured in an en-passant move, given the colour of the capturing piece."""
+        if colour == ColourType.WHITE:
+            return self.state[self.en_passant_square.rank-1][self.en_passant_square.file].piece
+        else:
+            return self.state[self.en_passant_square.rank+1][self.en_passant_square.file].piece
+
+    # todo: add to PawnMove class or separate out
+    def encode_en_passant(self, move: PawnMove) -> None:
+        if move.moved_piece.colour_type == ColourType.WHITE:
+            move.capture_square = self.state[move.to_.rank-1][move.to_.file]
+        else:
+            move.capture_square = self.state[move.to_.rank+1][move.to_.file]
+        move.captured_piece = move.capture_square.piece
