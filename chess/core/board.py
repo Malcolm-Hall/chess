@@ -284,11 +284,3 @@ class Board:
             return self.state[self.en_passant_square.rank-1][self.en_passant_square.file].piece
         else:
             return self.state[self.en_passant_square.rank+1][self.en_passant_square.file].piece
-
-    # todo: add to PawnMove class or separate out
-    def encode_en_passant(self, move: PawnMove) -> None:
-        if move.moved_piece.colour_type == ColourType.WHITE:
-            move.capture_square = self.state[move.to_.rank-1][move.to_.file]
-        else:
-            move.capture_square = self.state[move.to_.rank+1][move.to_.file]
-        move.captured_piece = move.capture_square.piece

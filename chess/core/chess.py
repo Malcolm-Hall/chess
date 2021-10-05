@@ -42,7 +42,8 @@ class Chess:
             if is_pawn_promotion(to_.rank, from_.piece.colour_type):
                 encode_pawn_promotion(move, promotion_piece)
             if is_en_passant(to_, self.board.en_passant_square) and from_.piece.piece_type == PieceType.PAWN:
-                self.board.encode_en_passant(move)
+                captured_piece = self.board.get_en_passant_captured_piece()
+                move.captured_piece = captured_piece
         else:
             move = Move(from_, to_, self.board.en_passant_square)
 
