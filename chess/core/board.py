@@ -144,13 +144,13 @@ class Board:
             move.from_.piece = None
         # Update en-passant square
         if isinstance(move, PawnMove) and is_double_step(move.to_.rank, move.from_.rank):
-                en_passant_rank = en_passant_square_rank(move.moved_piece.colour_type)
-                self.en_passant_square = self.state[en_passant_rank][move.to_.file]
+            en_passant_rank = en_passant_square_rank(move.moved_piece.colour_type)
+            self.en_passant_square = self.state[en_passant_rank][move.to_.file]
         else:
             self.en_passant_square = None
         # Mark move as made and update the turn
         self.move_log.append(move)
-        self.turn = ColourType.WHITE if move.moved_piece.colour_type == ColourType.BLACK else ColourType.BLACK
+        self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
 
     def undo_move(self) -> None:
         try:
@@ -177,7 +177,7 @@ class Board:
             # Revert the en-passant square
             self.en_passant_square = move.previous_en_passant_square
             # Update the turn
-            self.turn = ColourType.WHITE if move.moved_piece.colour_type == ColourType.WHITE else ColourType.BLACK
+            self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
 
 
     def _generate_legal_moves(self) -> None:
@@ -213,7 +213,7 @@ class Board:
                 break
             to_square = self.state[to_rank][to_file]
             if is_en_passant(to_square, self.en_passant_square):
-                captured_piece = self.get_en_passant_captured_piece(from_square.piece.colour_type)
+                captured_piece = self.get_en_passant_captured_piece()
             else:
                 captured_piece = to_square.piece
             # capture moves must make a capture
@@ -235,6 +235,7 @@ class Board:
                     valid_moves.append(move)
             else:
                 move = PawnMove(from_square, to_square, self.en_passant_square)
+                # TODO: refactor PawnMove such that the captured piece is passed as an argument
                 move.captured_piece = captured_piece
                 valid_moves.append(move)
 
@@ -276,9 +277,10 @@ class Board:
             self.undo_move()
         return legal_moves
 
-    def get_en_passant_captured_piece(self, colour: ColourType) -> Optional[Piece]:
-        """Returns the piece to be captured in an en-passant move, given the colour of the capturing piece."""
-        if colour == ColourType.WHITE:
+    def get_en_passant_captured_piece(self) -> Optional[Piece]:
+        """Returns the piece to be captured in an en-passant move, determined from which colours' turn it is."""
+        assert self.en_passant_square is not None, "Function should only be called when there is an en-passant square"
+        if self.turn == ColourType.WHITE:
             return self.state[self.en_passant_square.rank-1][self.en_passant_square.file].piece
         else:
             return self.state[self.en_passant_square.rank+1][self.en_passant_square.file].piece
