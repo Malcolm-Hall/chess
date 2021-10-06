@@ -150,6 +150,7 @@ class Board:
         return valid_moves
 
     def _get_valid_moves_for_square(self, square: Square) -> list[Move]:
+        assert square.piece is not None
         valid_moves: list[Move] = []
         for potential_move in POTENTIAL_MOVES[square.piece.type_value]:
             # check pawn for en-passant and capture
@@ -157,7 +158,8 @@ class Board:
         return valid_moves
 
     def _check_move(self, from_square: Square, potential_move: PotentialMove) -> list[Move]:
-        valid_moves = []
+        assert from_square.piece is not None
+        valid_moves: list[Move] = []
         rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
         # loop till off board, hit piece or max range
         for i in potential_move.range():
@@ -184,7 +186,7 @@ class Board:
             # can't double-step if pawn has moved
             if is_pawn_double_step(from_square.piece.piece_type, from_square.rank, to_rank) and pawn_has_moved(from_square.rank, from_square.piece.colour_type):
                 break
-
+            move: Move
             if is_pawn_promotion(to_rank, from_square.piece):
                 for piece_type in PieceType:
                     if piece_type == PieceType.KING or piece_type == PieceType.PAWN:

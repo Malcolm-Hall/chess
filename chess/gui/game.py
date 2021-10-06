@@ -1,6 +1,5 @@
 from typing import Optional
 import pyglet
-from pyglet.window import mouse
 from util import is_pawn_promotion
 from core.chess import Chess
 from core.square import Square
@@ -64,7 +63,7 @@ class Game(pyglet.window.Window):
         self.promotion_colour = None
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if button is mouse.LEFT:
+        if button is pyglet.window.mouse.LEFT:
             clicked_file = int(x / self.layout.square_size)
             clicked_rank = int(y / self.layout.square_size)
             if self.selected_squares == []:
@@ -83,7 +82,7 @@ class Game(pyglet.window.Window):
                     return
             self.selected_squares.append((clicked_rank, clicked_file))
             self.move()
-        if button is mouse.RIGHT:
+        if button is pyglet.window.mouse.RIGHT:
             self.chess.undo_move()
             self.brute_force_update()
             print(self.chess.board)

@@ -32,6 +32,7 @@ class Chess:
         to_ = self.board.state[to_rank][to_file]
         if from_.piece is None:
             return False
+        move: Move
         if is_pawn_promotion(to_.rank, from_.piece):
             move = PromotionMove(from_, to_, self.board.en_passant_square, promotion_piece_type)
         elif is_en_passant(from_.piece.piece_type, to_, self.board.en_passant_square):
