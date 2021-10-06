@@ -1,5 +1,5 @@
-from core.util import is_en_passant
-from core.board import Board, read_chess_notation, is_pawn_promotion
+from util import is_en_passant, is_pawn_promotion, read_chess_notation
+from core.board import Board
 from core.piece import PieceType
 from core.move import Move, PromotionMove, EnPassantMove
 

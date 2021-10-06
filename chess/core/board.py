@@ -1,7 +1,7 @@
 import copy
 from typing import Optional
 from constants import UNICODE_WHITE_SPACE
-from core.util import read_chess_notation, is_pawn_promotion, is_en_passant
+from util import read_chess_notation, is_pawn_promotion, is_en_passant
 from core.square import Square
 from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
 from core.move import Move, PromotionMove, EnPassantMove

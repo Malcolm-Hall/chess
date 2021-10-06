@@ -1,8 +1,8 @@
 from typing import Optional
 import pyglet
 from pyglet.window import mouse
-import core.chess
-from core.board import is_pawn_promotion
+from util import is_pawn_promotion
+from core.chess import Chess
 from core.square import Square
 from core.piece import PieceType, ColourType
 from gui.promotion_overlay import PromotionOverlay
@@ -51,7 +51,7 @@ class Game(pyglet.window.Window):
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         super().__init__(self.layout.board_size, self.layout.board_size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
-        self.chess = core.chess.Chess(fen)
+        self.chess = Chess(fen)
         self.board_sprites = board_sprites_generator(self.layout.square_size, self.main_batch, self.board_group)
         self.piece_sprites = piece_sprites_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
         self.promotion_overlay = PromotionOverlay(self.layout)
