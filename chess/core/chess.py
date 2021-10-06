@@ -12,18 +12,14 @@ class Chess:
     halfmove_number: int = 0
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         # TODO: verify fen
-        self.setup_from_fen(fen)
-        print(self.board)
-
-    def setup_from_fen(self, fen: str) -> None:
-        # rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
         fen_split = fen.split()
         self.fullmove_number = int(fen_split.pop())
         self.halfmove_number = int(fen_split.pop())
         self.board = Board(fen_split)
+        print(self.board)
 
     def undo_move(self) -> None:
-        # Todo: undo logic involving fullmove and halfmove number
+        # TODO: logic involving fullmove and halfmove number
         self.board.undo_move()
 
     def move_from_notation(self, from_position: str, to_position: str) -> None:
@@ -34,13 +30,11 @@ class Chess:
     def move_from_position(self, from_rank: int, from_file: int, to_rank: int, to_file: int, promotion_piece_type: PieceType = PieceType.QUEEN) -> bool:
         from_ = self.board.state[from_rank][from_file]
         to_ = self.board.state[to_rank][to_file]
-        move: Move
         if from_.piece is None:
             return False
         if is_pawn_promotion(to_.rank, from_.piece):
-                move = PromotionMove(from_, to_, self.board.en_passant_square, promotion_piece_type)
-
-        if is_en_passant(from_.piece.piece_type, to_, self.board.en_passant_square):
+            move = PromotionMove(from_, to_, self.board.en_passant_square, promotion_piece_type)
+        elif is_en_passant(from_.piece.piece_type, to_, self.board.en_passant_square):
             capture_square = self.board.get_en_passant_capture_square()
             move = EnPassantMove(from_, to_, self.board.en_passant_square, capture_square)
         else:

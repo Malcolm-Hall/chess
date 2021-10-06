@@ -35,7 +35,7 @@ class Move:
 
 class PromotionMove(Move):
     """Represents a move where a pawn promotes to a given PieceType."""
-    promotion_piece: Optional[Piece]
+    promotion_piece: Piece
     def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square], promotion_piece_type: PieceType):
         super().__init__(from_, to_, previous_en_passant_square)
         self.promotion_piece = Piece(promotion_piece_type, self.moved_piece.colour_type)

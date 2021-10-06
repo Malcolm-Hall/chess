@@ -3,6 +3,7 @@ from itertools import permutations, product
 from core.piece import ColourType
 
 class PotentialMove():
+    """Represents a potential move a piece can make, regardless of the board state"""
     rank_change: int
     file_change: int
     
@@ -18,6 +19,7 @@ class PotentialMove():
         yield 1
 
 class SlidingPotentialMove(PotentialMove):
+    """Represents sliding potential moves, which have infinite range"""
     def range(self) -> Iterator[int]:
         output = 1
         while True:
@@ -26,6 +28,7 @@ class SlidingPotentialMove(PotentialMove):
 
 
 class PawnPotentialMove(PotentialMove):
+    """Represents a potential move of a pawn."""
     capture: bool
     def __init__(self, rank_change: int, file_change: int, capture: bool = False):
         super().__init__(rank_change, file_change)

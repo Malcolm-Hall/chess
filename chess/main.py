@@ -2,7 +2,7 @@ import pyglet
 import gui.game
 
 if __name__ == '__main__':
-    # test = gui.game.Game("rnbqkbnr/pppppppP/8/PP6/8/PPPP4/PpPPPPPP/R1BQKBNR w KQkq - 0 1")
+    # test = gui.game.Game("8/8/8/8/8/8/1ppp4/8 w KQkq - 0 1")
     fen = input("Enter FEN to start from a position or leave empty for a new game: ")
     # TODO: validate FEN
     if fen:

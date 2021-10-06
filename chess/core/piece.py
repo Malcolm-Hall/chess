@@ -29,7 +29,7 @@ class Piece:
         return UNICODE_PIECE_SYMBOLS[self.piece_type.value][self.colour_type.value]
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Piece):
+        if isinstance(other, type(self)):
             return (self.piece_type == other.piece_type) and (self.colour_type == other.colour_type)
         return NotImplemented
 

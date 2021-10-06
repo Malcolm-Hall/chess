@@ -1,11 +1,10 @@
-from typing import Union, Optional
+from typing import Optional
 import pyglet
 from pyglet.window import mouse
-from constants import PIECE_STRS, UNICODE_PIECE_SYMBOLS
 import core.chess
 from core.board import is_pawn_promotion
 from core.square import Square
-from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
+from core.piece import PieceType, ColourType
 from gui.promotion_overlay import PromotionOverlay
 from gui.sprites import PieceSprite, SquareSprite
 from gui.layout import Layout

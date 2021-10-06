@@ -2,7 +2,7 @@ from typing import Optional
 from core.piece import Piece
 
 class Square:
-    """Represents the square of a chess board of a given rank and file."""
+    """Represents a square of a chess board of a given rank and file."""
     rank: int
     file: int
     piece: Optional[Piece]
