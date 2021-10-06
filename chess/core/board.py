@@ -5,7 +5,7 @@ from util import read_chess_notation, is_pawn_promotion, is_en_passant
 from core.square import Square
 from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
 from core.move import Move, PromotionMove, EnPassantMove
-from core.potential_move import PotentialMove, PawnPotentialMove, POTENTIAL_MOVES
+from core.potential_move import PotentialMove, PawnStepPotentialMove, PawnCapturePotentialMove, POTENTIAL_MOVES
 
 def get_board_state(board_state_fen: str) -> list[list[Square]]:
     state = [[Square(rank, file) for file in range(8)] for rank in range(8)]
@@ -162,9 +162,10 @@ class Board:
         valid_moves: list[Move] = []
         rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
         # loop till off board, hit piece or max range
-        for i in potential_move.range():
+        for i in potential_move:
             to_rank, to_file = from_square.rank + i * rank_change, from_square.file + i * file_change
             if is_off_board(to_rank, to_file):
+                # TODO: use this to check if castling is legal
                 break
             to_square = self.state[to_rank][to_file]
             if is_en_passant(from_square.piece.piece_type, to_square, self.en_passant_square):
@@ -172,15 +173,16 @@ class Board:
             else:
                 captured_piece = to_square.piece
             
-            # moves can't make a capture of the same colour
-            if captured_piece is not None and captured_piece.colour_type == self.turn:
-                break
-            if isinstance(potential_move, PawnPotentialMove):
-                # pawn capture moves must make a capture
-                if potential_move.capture and captured_piece is None:
+            if captured_piece is not None:
+                # moves must not make a capture of the same colour
+                if captured_piece.colour_type == self.turn:
                     break
-                # pawn non-capture moves must not make a capture
-                if not potential_move.capture and captured_piece is not None:
+                # pawn step moves must not make a capture
+                if isinstance(potential_move, PawnStepPotentialMove):
+                    break
+            else:
+                # pawn capture moves must make a capture
+                if isinstance(potential_move, PawnCapturePotentialMove):
                     break
             
             # can't double-step if pawn has moved

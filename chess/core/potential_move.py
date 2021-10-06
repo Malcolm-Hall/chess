@@ -15,30 +15,39 @@ class PotentialMove():
         rank_change = self.rank_change * (-1 if colour == ColourType.BLACK else 1)
         return rank_change, self.file_change
     
-    def range(self) -> Iterator[int]:
+    def __iter__(self) -> Iterator[int]:
         yield 1
 
 class SlidingPotentialMove(PotentialMove):
     """Represents sliding potential moves, which have infinite range"""
-    def range(self) -> Iterator[int]:
+    def __iter__(self) -> Iterator[int]:
         output = 1
         while True:
             yield output
             output += 1
 
 
-class PawnPotentialMove(PotentialMove):
-    """Represents a potential move of a pawn."""
-    capture: bool
-    def __init__(self, rank_change: int, file_change: int, capture: bool = False):
-        super().__init__(rank_change, file_change)
-        self.capture = capture
+# class PawnPotentialMove(PotentialMove):
+#     """Represents a potential move of a pawn."""
+#     capture: bool
+#     def __init__(self, rank_change: int, file_change: int, capture: bool = False):
+#         super().__init__(rank_change, file_change)
+#         self.capture = capture
     
-    def range(self) -> Iterator[int]:
-        yield 1
-        if not self.capture:
-            yield 2
+#     def __iter__(self) -> Iterator[int]:
+#         yield 1
+#         if not self.capture:
+#             yield 2
 
+class PawnStepPotentialMove(PotentialMove):
+    """Represents a pawn step potential move, including double step."""
+    def __iter__(self) -> Iterator[int]:
+        yield 1
+        yield 2
+
+class PawnCapturePotentialMove(PotentialMove):
+    """Represents a pawn capture potential move, including en-passant."""
+    pass
 
 def generate_sliding_moves():
     perms = "ABC"
@@ -76,8 +85,9 @@ def generate_knight_moves():
     return knight_moves
 
 def generate_pawn_moves():
-    PPM = PawnPotentialMove
-    return [PPM(1,0), PPM(1,-1,True), PPM(1,1,True)]
+    PSPM = PawnStepPotentialMove
+    PCPM = PawnCapturePotentialMove
+    return [PSPM(1,0), PCPM(1,1), PCPM(1,-1)]
 
 sliding_moves = generate_sliding_moves()
 knight_moves = generate_knight_moves()
