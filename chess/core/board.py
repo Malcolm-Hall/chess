@@ -1,11 +1,23 @@
 import copy
 from typing import Optional
+
 from constants import UNICODE_WHITE_SPACE
-from util import read_chess_notation, is_pawn_promotion, is_en_passant
+from core.move import EnPassantMove
+from core.move import Move
+from core.move import PromotionMove
+from core.piece import CHESS_PIECES
+from core.piece import ColourType
+from core.piece import Piece
+from core.piece import PieceType
+from core.potential_move import PawnCapturePotentialMove
+from core.potential_move import PawnStepPotentialMove
+from core.potential_move import POTENTIAL_MOVES
+from core.potential_move import PotentialMove
 from core.square import Square
-from core.piece import Piece, PieceType, ColourType, CHESS_PIECES
-from core.move import Move, PromotionMove, EnPassantMove
-from core.potential_move import PotentialMove, PawnStepPotentialMove, PawnCapturePotentialMove, POTENTIAL_MOVES
+from util import is_en_passant
+from util import is_pawn_promotion
+from util import read_chess_notation
+
 
 def get_board_state(board_state_fen: str) -> list[list[Square]]:
     state = [[Square(rank, file) for file in range(8)] for rank in range(8)]
@@ -21,21 +33,25 @@ def get_board_state(board_state_fen: str) -> list[list[Square]]:
                 file += 1
     return state
 
+
 def is_off_board(rank: int, file: int) -> bool:
     return rank < 0 or rank > 7 or file < 0 or file > 7
+
 
 def is_pawn_double_step(piece_type: PieceType, from_rank: int, to_rank: int) -> bool:
     return piece_type == PieceType.PAWN and abs(from_rank - to_rank) == 2
 
+
 def pawn_has_moved(from_rank: int, colour: ColourType) -> bool:
     """
-    Returns whether a pawn of a given colour has moved from the starting rank. 
+    Returns whether a pawn of a given colour has moved from the starting rank.
     Used to determine if a double-step move is allowed.
     """
     if colour == ColourType.WHITE:
         return from_rank != 1
     else:
         return from_rank != 6
+
 
 def en_passant_capture_rank(colour: ColourType) -> int:
     """
@@ -48,6 +64,7 @@ def en_passant_capture_rank(colour: ColourType) -> int:
     else:
         return 3
 
+
 def en_passant_square_rank(colour: ColourType) -> int:
     """
     The rank in which the next en-passant square exists given the colour of the moving piece.
@@ -59,6 +76,7 @@ def en_passant_square_rank(colour: ColourType) -> int:
     else:
         return 5
 
+
 class Board:
     # [Rank][File]
     state: list[list[Square]]
@@ -68,6 +86,7 @@ class Board:
     castling_rights = "KQkq"
     turn: ColourType = ColourType.WHITE
     move_log: list[Move] = []
+
     def __init__(self, fen: list[str]):
         fen.reverse()
         board_state_fen = fen.pop()
@@ -88,7 +107,9 @@ class Board:
         board_str = ""
         for rank in reversed(self.state):
             for square in rank:
-                board_str += "|" + (str(square.piece) if square.piece is not None else UNICODE_WHITE_SPACE)
+                board_str += "|" + (str(square.piece)
+                                    if square.piece is not None else
+                                    UNICODE_WHITE_SPACE)
             board_str += "|\n"
         return board_str
 
@@ -135,7 +156,6 @@ class Board:
             # Update the turn
             self.turn = ColourType.WHITE if self.turn == ColourType.BLACK else ColourType.BLACK
 
-
     def _generate_legal_moves(self) -> None:
         self.valid_moves = self._get_valid_moves()
         # TODO: Generate legal moves more efficiently
@@ -163,7 +183,8 @@ class Board:
         rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
         # loop till off board, hit piece or max range
         for i in potential_move:
-            to_rank, to_file = from_square.rank + i * rank_change, from_square.file + i * file_change
+            to_rank, to_file = (from_square.rank + i * rank_change,
+                                from_square.file + i * file_change)
             if is_off_board(to_rank, to_file):
                 # TODO: use this to check if castling is legal
                 break
@@ -172,7 +193,7 @@ class Board:
                 captured_piece = self.get_en_passant_captured_piece()
             else:
                 captured_piece = to_square.piece
-            
+
             if captured_piece is not None:
                 # moves must not make a capture of the same colour
                 if captured_piece.colour_type == self.turn:
@@ -184,7 +205,7 @@ class Board:
                 # pawn capture moves must make a capture
                 if isinstance(potential_move, PawnCapturePotentialMove):
                     break
-            
+
             # can't double-step if pawn has moved
             if is_pawn_double_step(from_square.piece.piece_type, from_square.rank, to_rank) and pawn_has_moved(from_square.rank, from_square.piece.colour_type):
                 break
@@ -193,10 +214,14 @@ class Board:
                 for piece_type in PieceType:
                     if piece_type == PieceType.KING or piece_type == PieceType.PAWN:
                         continue
-                    move = PromotionMove(from_square, to_square, self.en_passant_square, piece_type)
+                    move = PromotionMove(
+                        from_square, to_square,
+                        self.en_passant_square, piece_type)
                     valid_moves.append(move)
             elif is_en_passant(from_square.piece.piece_type, to_square, self.en_passant_square):
-                move = EnPassantMove(from_square, to_square, self.en_passant_square, self.get_en_passant_capture_square())
+                move = EnPassantMove(
+                    from_square, to_square, self.en_passant_square,
+                    self.get_en_passant_capture_square())
                 valid_moves.append(move)
             else:
                 move = Move(from_square, to_square, self.en_passant_square)
@@ -228,14 +253,14 @@ class Board:
         """Returns the piece to be captured in an en-passant move, determined from which colours' turn it is."""
         assert self.en_passant_square is not None, "Function should only be called when there is an en-passant square"
         if self.turn == ColourType.WHITE:
-            return self.state[self.en_passant_square.rank-1][self.en_passant_square.file].piece
+            return self.state[self.en_passant_square.rank - 1][self.en_passant_square.file].piece
         else:
-            return self.state[self.en_passant_square.rank+1][self.en_passant_square.file].piece
+            return self.state[self.en_passant_square.rank + 1][self.en_passant_square.file].piece
 
     def get_en_passant_capture_square(self) -> Square:
         """Returns the square which contains the captured piece in an en-passant move, determined from which colours' turn it is."""
         assert self.en_passant_square is not None, "Function should only be called when there is an en-passant square"
         if self.turn == ColourType.WHITE:
-            return self.state[self.en_passant_square.rank-1][self.en_passant_square.file]
+            return self.state[self.en_passant_square.rank - 1][self.en_passant_square.file]
         else:
-            return self.state[self.en_passant_square.rank+1][self.en_passant_square.file]
+            return self.state[self.en_passant_square.rank + 1][self.en_passant_square.file]

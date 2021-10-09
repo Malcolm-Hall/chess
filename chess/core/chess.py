@@ -1,7 +1,11 @@
-from util import is_en_passant, is_pawn_promotion, read_chess_notation
 from core.board import Board
+from core.move import EnPassantMove
+from core.move import Move
+from core.move import PromotionMove
 from core.piece import PieceType
-from core.move import Move, PromotionMove, EnPassantMove
+from util import is_en_passant
+from util import is_pawn_promotion
+from util import read_chess_notation
 
 
 class Chess:
@@ -10,6 +14,7 @@ class Chess:
     # State variables
     fullmove_number: int = 1
     halfmove_number: int = 0
+
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         # TODO: verify fen
         fen_split = fen.split()

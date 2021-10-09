@@ -1,11 +1,14 @@
 from typing import Optional
+
 from core.piece import Piece
+
 
 class Square:
     """Represents a square of a chess board of a given rank and file."""
     rank: int
     file: int
     piece: Optional[Piece]
+
     def __init__(self, rank: int, file: int, piece: Piece = None):
         self.rank = rank
         self.file = file

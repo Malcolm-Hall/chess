@@ -14,11 +14,11 @@ repos:
     -   id: mypy
         args: [--ignore-missing-imports]
 
--   repo: https://github.com/PyCQA/flake8
-    rev: 3.9.2
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.5.7
     hooks:
-    -   id: flake8
-        language_version: python3
+    -   id: autopep8
+        args: [-i, --ignore=E501]
 
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v2.6.0

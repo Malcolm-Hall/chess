@@ -1,12 +1,15 @@
-from typing import  Iterator
-from itertools import permutations, product
+from collections.abc import Iterator
+from itertools import permutations
+from itertools import product
+
 from core.piece import ColourType
+
 
 class PotentialMove():
     """Represents a potential move a piece can make, regardless of the board state"""
     rank_change: int
     file_change: int
-    
+
     def __init__(self, rank_change: int, file_change: int):
         self.rank_change = rank_change
         self.file_change = file_change
@@ -14,12 +17,14 @@ class PotentialMove():
     def get_rank_file_change(self, colour: ColourType) -> tuple[int, int]:
         rank_change = self.rank_change * (-1 if colour == ColourType.BLACK else 1)
         return rank_change, self.file_change
-    
+
     def __iter__(self) -> Iterator[int]:
         yield 1
 
+
 class SlidingPotentialMove(PotentialMove):
     """Represents sliding potential moves, which have infinite range"""
+
     def __iter__(self) -> Iterator[int]:
         output = 1
         while True:
@@ -33,7 +38,7 @@ class SlidingPotentialMove(PotentialMove):
 #     def __init__(self, rank_change: int, file_change: int, capture: bool = False):
 #         super().__init__(rank_change, file_change)
 #         self.capture = capture
-    
+
 #     def __iter__(self) -> Iterator[int]:
 #         yield 1
 #         if not self.capture:
@@ -41,26 +46,29 @@ class SlidingPotentialMove(PotentialMove):
 
 class PawnStepPotentialMove(PotentialMove):
     """Represents a pawn step potential move, including double step."""
+
     def __iter__(self) -> Iterator[int]:
         yield 1
         yield 2
+
 
 class PawnCapturePotentialMove(PotentialMove):
     """Represents a pawn capture potential move, including en-passant."""
     pass
 
+
 def generate_sliding_moves():
     perms = "ABC"
-    conversion = {"A":-1,
-                  "B":0,
-                  "C":1}
+    conversion = {"A": -1,
+                  "B": 0,
+                  "C": 1}
     king_moves = []
     queen_moves = []
     rook_moves = []
     bishop_moves = []
     for val in product(perms, repeat=2):
         direction = conversion[val[0]], conversion[val[1]]
-        if direction == (0,0):
+        if direction == (0, 0):
             continue
         king_moves.append(PotentialMove(direction[0], direction[1]))
         queen_moves.append(SlidingPotentialMove(direction[0], direction[1]))
@@ -69,6 +77,7 @@ def generate_sliding_moves():
         else:
             bishop_moves.append(SlidingPotentialMove(direction[0], direction[1]))
     return [king_moves, queen_moves, rook_moves, bishop_moves]
+
 
 def generate_knight_moves():
     perms = "ABCD"
@@ -84,10 +93,12 @@ def generate_knight_moves():
         knight_moves.append(PotentialMove(direction[0], direction[1]))
     return knight_moves
 
+
 def generate_pawn_moves():
     PSPM = PawnStepPotentialMove
     PCPM = PawnCapturePotentialMove
-    return [PSPM(1,0), PCPM(1,1), PCPM(1,-1)]
+    return [PSPM(1, 0), PCPM(1, 1), PCPM(1, -1)]
+
 
 sliding_moves = generate_sliding_moves()
 knight_moves = generate_knight_moves()
@@ -97,5 +108,5 @@ POTENTIAL_MOVES = [sliding_moves[0],  # K
                    sliding_moves[1],  # Q
                    sliding_moves[2],  # R
                    sliding_moves[3],  # B
-                   knight_moves    ,  # N
-                   pawn_moves       ] # P
+                   knight_moves,      # N
+                   pawn_moves]        # P

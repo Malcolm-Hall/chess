@@ -1,6 +1,9 @@
 from typing import Optional
-from core.piece import Piece, PieceType
+
+from core.piece import Piece
+from core.piece import PieceType
 from core.square import Square
+
 
 class Move:
     """Represents a generic move."""
@@ -9,6 +12,7 @@ class Move:
     moved_piece: Piece
     captured_piece: Optional[Piece]
     previous_en_passant_square: Optional[Square]
+
     def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square]):
         assert from_.piece is not None, "A piece to move is required."
         self.from_ = from_
@@ -24,7 +28,7 @@ class Move:
         if isinstance(other, type(self)):
             return (self.from_ == other.from_) and (self.to_ == other.to_)
         return NotImplemented
-    
+
     def make(self) -> None:
         self.to_.piece = self.moved_piece
         self.from_.piece = None
@@ -37,6 +41,7 @@ class Move:
 class PromotionMove(Move):
     """Represents a move where a pawn promotes to a given PieceType."""
     promotion_piece: Piece
+
     def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square], promotion_piece_type: PieceType):
         super().__init__(from_, to_, previous_en_passant_square)
         self.promotion_piece = Piece(promotion_piece_type, self.moved_piece.colour_type)
@@ -45,7 +50,7 @@ class PromotionMove(Move):
         if isinstance(other, type(self)):
             return (self.from_ == other.from_) and (self.to_ == other.to_) and (self.promotion_piece == other.promotion_piece)
         return NotImplemented
-    
+
     def make(self) -> None:
         self.to_.piece = self.promotion_piece
         self.from_.piece = None
@@ -54,6 +59,7 @@ class PromotionMove(Move):
 class EnPassantMove(Move):
     """Represents a move where a pawn makes an en-passant capture."""
     capture_square: Square
+
     def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square], capture_square: Square):
         super().__init__(from_, to_, previous_en_passant_square)
         self.capture_square = capture_square
@@ -70,7 +76,7 @@ class EnPassantMove(Move):
     def make(self) -> None:
         super().make()
         self.capture_square.piece = None
-    
+
     def undo(self) -> None:
         self.from_.piece = self.moved_piece
         self.capture_square.piece = self.captured_piece

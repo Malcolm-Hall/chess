@@ -1,40 +1,46 @@
 from typing import Optional
+
 import pyglet
-from util import is_pawn_promotion
 from core.chess import Chess
+from core.piece import ColourType
+from core.piece import PieceType
 from core.square import Square
-from core.piece import PieceType, ColourType
-from gui.promotion_overlay import PromotionOverlay
-from gui.sprites import PieceSprite, SquareSprite
 from gui.layout import Layout
+from gui.promotion_overlay import PromotionOverlay
+from gui.sprites import PieceSprite
+from gui.sprites import SquareSprite
+from util import is_pawn_promotion
+
 
 def board_sprites_generator(square_size: int, main_batch, board_group) -> list[SquareSprite]:
     """Generates board sprites of a given square size and assigns the render batch and group"""
-    return [SquareSprite(i*square_size,
-            j*square_size,
+    return [SquareSprite(i * square_size,
+            j * square_size,
             square_size,
             square_size,
-            (157, 126, 104) if (i%2==0) != (j%2==0) else (85, 60, 42),
+            (157, 126, 104) if (i % 2 == 0) != (j % 2 == 0) else (85, 60, 42),
             main_batch,
             board_group)
-        for i in range(8) 
-        for j in range(8)]
+            for i in range(8)
+            for j in range(8)]
+
 
 def piece_sprites_generator(board_state: list[list[Square]], layout: Layout, main_batch, pieces_group) -> list[list[Optional[PieceSprite]]]:
     "Generates piece sprites of a given Layout and assigns the render batch and group"
     return [[(PieceSprite(str(square.piece),
-                file * layout.square_size + layout.piece_offset[0],
-                rank * layout.square_size + layout.piece_offset[1],
-                layout.piece_size,
-                main_batch,
-                pieces_group)
+                          file * layout.square_size + layout.piece_offset[0],
+                          rank * layout.square_size + layout.piece_offset[1],
+                          layout.piece_size,
+                          main_batch,
+                          pieces_group)
             if square.piece is not None else None)
-        for file, square in enumerate(squares)] 
-        for rank, squares in enumerate(board_state)]
+             for file, square in enumerate(squares)]
+            for rank, squares in enumerate(board_state)]
+
 
 class Game(pyglet.window.Window):
     """
-    Constructs a game of chess using Pyglet for the GUI. 
+    Constructs a game of chess using Pyglet for the GUI.
     Use 'pyglet.app.run()' after construction to run the game.
     """
     auto_queen: bool = False
@@ -47,12 +53,16 @@ class Game(pyglet.window.Window):
     piece_sprites: list[list[Optional[PieceSprite]]]
     promotion_overlay: PromotionOverlay
     promotion_colour: Optional[ColourType] = None
+
     def __init__(self, fen: str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         super().__init__(self.layout.board_size, self.layout.board_size, caption="Chess")
         self.fpsDisplay = pyglet.window.FPSDisplay(window=self)
         self.chess = Chess(fen)
-        self.board_sprites = board_sprites_generator(self.layout.square_size, self.main_batch, self.board_group)
-        self.piece_sprites = piece_sprites_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
+        self.board_sprites = board_sprites_generator(
+            self.layout.square_size, self.main_batch, self.board_group)
+        self.piece_sprites = piece_sprites_generator(
+            self.chess.board.state, self.layout,
+            self.main_batch, self.pieces_group)
         self.promotion_overlay = PromotionOverlay(self.layout)
 
     def on_draw(self):
@@ -93,7 +103,7 @@ class Game(pyglet.window.Window):
         promotion_piece = PieceType.QUEEN
         if len(self.selected_squares) > 2:
             selected_rank, selected_file = self.selected_squares.pop()
-            if selected_file in range(2,6) and from_rank == selected_rank:
+            if selected_file in range(2, 6) and from_rank == selected_rank:
                 promotion_piece = PieceType(selected_file - 1)
             else:
                 self.selected_squares = []
@@ -109,4 +119,6 @@ class Game(pyglet.window.Window):
                 if piece is None:
                     continue
                 piece.delete()
-        self.piece_sprites = piece_sprites_generator(self.chess.board.state, self.layout, self.main_batch, self.pieces_group)
+        self.piece_sprites = piece_sprites_generator(
+            self.chess.board.state, self.layout,
+            self.main_batch, self.pieces_group)
