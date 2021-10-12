@@ -2,18 +2,18 @@ from typing import Optional
 
 from core.piece import Piece
 from core.piece import PieceType
-from core.square import Square
+from core.square import BoardSquare
 
 
 class Move:
     """Represents a generic move."""
-    from_: Square
-    to_: Square
+    from_: BoardSquare
+    to_: BoardSquare
     moved_piece: Piece
     captured_piece: Optional[Piece]
-    previous_en_passant_square: Optional[Square]
+    previous_en_passant_square: Optional[BoardSquare]
 
-    def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square]):
+    def __init__(self, from_: BoardSquare, to_: BoardSquare, previous_en_passant_square: Optional[BoardSquare]):
         assert from_.piece is not None, "A piece to move is required."
         self.from_ = from_
         self.to_ = to_
@@ -42,7 +42,7 @@ class PromotionMove(Move):
     """Represents a move where a pawn promotes to a given PieceType."""
     promotion_piece: Piece
 
-    def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square], promotion_piece_type: PieceType):
+    def __init__(self, from_: BoardSquare, to_: BoardSquare, previous_en_passant_square: Optional[BoardSquare], promotion_piece_type: PieceType):
         super().__init__(from_, to_, previous_en_passant_square)
         self.promotion_piece = Piece(promotion_piece_type, self.moved_piece.colour_type)
 
@@ -58,9 +58,9 @@ class PromotionMove(Move):
 
 class EnPassantMove(Move):
     """Represents a move where a pawn makes an en-passant capture."""
-    capture_square: Square
+    capture_square: BoardSquare
 
-    def __init__(self, from_: Square, to_: Square, previous_en_passant_square: Optional[Square], capture_square: Square):
+    def __init__(self, from_: BoardSquare, to_: BoardSquare, previous_en_passant_square: Optional[BoardSquare], capture_square: BoardSquare):
         super().__init__(from_, to_, previous_en_passant_square)
         self.capture_square = capture_square
         self.captured_piece = capture_square.piece

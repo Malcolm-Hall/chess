@@ -37,16 +37,6 @@ class Piece:
             return (self.piece_type == other.piece_type) and (self.colour_type == other.colour_type)
         return NotImplemented
 
-    @property
-    def type_value(self) -> int:
-        """Returns the type value of the piece. Used as an index for arrays"""
-        return self.piece_type.value
-
-    @property
-    def colour_value(self) -> int:
-        """Returns the colour value of the piece. Used as an index for arrays"""
-        return self.colour_type.value
-
 
 CHESS_PIECES: dict[piece_str, Piece] = {"k": Piece(PieceType.KING, ColourType.WHITE), "q": Piece(PieceType.QUEEN, ColourType.WHITE),
                                         "r": Piece(PieceType.ROOK, ColourType.WHITE), "b": Piece(PieceType.BISHOP, ColourType.WHITE),

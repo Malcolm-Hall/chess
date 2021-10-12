@@ -13,14 +13,20 @@ from core.potential_move import PawnCapturePotentialMove
 from core.potential_move import PawnStepPotentialMove
 from core.potential_move import POTENTIAL_MOVES
 from core.potential_move import PotentialMove
-from core.square import Square
+from core.square import BoardSquare
 from util import is_en_passant
 from util import is_pawn_promotion
 from util import read_chess_notation
 
 
-def get_board_state(board_state_fen: str) -> list[list[Square]]:
-    state = [[Square(rank, file) for file in range(8)] for rank in range(8)]
+def get_blank_board() -> list[list[BoardSquare]]:
+    """Get a 8x8 chess board with no pieces."""
+    return [[BoardSquare(rank, file) for file in range(8)] for rank in range(8)]
+
+
+def get_board_state(board_state_fen: str) -> list[list[BoardSquare]]:
+    """Get an 8x8 chess board set-up according to the given board state FEN."""
+    board = get_blank_board()
     ranks = board_state_fen.split("/")
     for rank, pieces in enumerate(ranks):
         file = 0
@@ -29,24 +35,23 @@ def get_board_state(board_state_fen: str) -> list[list[Square]]:
                 file += int(char)
             else:
                 piece = copy.deepcopy(CHESS_PIECES[char])
-                state[rank][file].piece = piece
+                board[rank][file] = BoardSquare(rank, file, piece)
                 file += 1
-    return state
+    return board
 
 
 def is_off_board(rank: int, file: int) -> bool:
+    """Check if the given rank and file are off an 8x8 chess board."""
     return rank < 0 or rank > 7 or file < 0 or file > 7
 
 
 def is_pawn_double_step(piece_type: PieceType, from_rank: int, to_rank: int) -> bool:
+    """Check if a piece is a pawn and performs a double step move."""
     return piece_type == PieceType.PAWN and abs(from_rank - to_rank) == 2
 
 
 def pawn_has_moved(from_rank: int, colour: ColourType) -> bool:
-    """
-    Returns whether a pawn of a given colour has moved from the starting rank.
-    Used to determine if a double-step move is allowed.
-    """
+    """Check if a pawn has mpved from its starting position."""
     if colour == ColourType.WHITE:
         return from_rank != 1
     else:
@@ -54,11 +59,7 @@ def pawn_has_moved(from_rank: int, colour: ColourType) -> bool:
 
 
 def en_passant_capture_rank(colour: ColourType) -> int:
-    """
-    The rank in which en-passant capture occurs given the colour of the capturing piece.
-    White captures black on rank 4
-    Black captures white on rank 3
-    """
+    """Get the rank of the piece to be captured in en-passant, from the capturers ColourType."""
     if colour == ColourType.WHITE:
         return 4
     else:
@@ -66,11 +67,7 @@ def en_passant_capture_rank(colour: ColourType) -> int:
 
 
 def en_passant_square_rank(colour: ColourType) -> int:
-    """
-    The rank in which the next en-passant square exists given the colour of the moving piece.
-    White double-stepping produces an en-passant square on rank 2
-    Black double-stepping produces an en-passant square on rank 5
-    """
+    """Get the rank of the en-passant square from the ColourType of double-stepping piece."""
     if colour == ColourType.WHITE:
         return 2
     else:
@@ -79,10 +76,10 @@ def en_passant_square_rank(colour: ColourType) -> int:
 
 class Board:
     # [Rank][File]
-    state: list[list[Square]]
+    state: list[list[BoardSquare]]
     valid_moves: list[Move] = []
     legal_moves: list[Move] = []
-    en_passant_square: Optional[Square] = None
+    en_passant_square: Optional[BoardSquare] = None
     castling_rights = "KQkq"
     turn: ColourType = ColourType.WHITE
     move_log: list[Move] = []
@@ -100,8 +97,8 @@ class Board:
 
         en_passant_fen = fen.pop()
         if en_passant_fen != "-":
-            en_passant_rank, en_passant_file = read_chess_notation(en_passant_fen)
-            self.en_passant_square = self.state[en_passant_rank][en_passant_file]
+            ep_position = read_chess_notation(en_passant_fen)
+            self.en_passant_square = self.state[ep_position.rank][ep_position.file]
 
     def __repr__(self) -> str:
         board_str = ""
@@ -169,15 +166,15 @@ class Board:
                     valid_moves += self._get_valid_moves_for_square(square)
         return valid_moves
 
-    def _get_valid_moves_for_square(self, square: Square) -> list[Move]:
+    def _get_valid_moves_for_square(self, square: BoardSquare) -> list[Move]:
         assert square.piece is not None
         valid_moves: list[Move] = []
-        for potential_move in POTENTIAL_MOVES[square.piece.type_value]:
+        for potential_move in POTENTIAL_MOVES[square.piece.piece_type.value]:
             # check pawn for en-passant and capture
             valid_moves += self._check_move(square, potential_move)
         return valid_moves
 
-    def _check_move(self, from_square: Square, potential_move: PotentialMove) -> list[Move]:
+    def _check_move(self, from_square: BoardSquare, potential_move: PotentialMove) -> list[Move]:
         assert from_square.piece is not None
         valid_moves: list[Move] = []
         rank_change, file_change = potential_move.get_rank_file_change(from_square.piece.colour_type)
@@ -249,18 +246,15 @@ class Board:
             self.undo_move()
         return legal_moves
 
-    def get_en_passant_captured_piece(self) -> Optional[Piece]:
-        """Returns the piece to be captured in an en-passant move, determined from which colours' turn it is."""
-        assert self.en_passant_square is not None, "Function should only be called when there is an en-passant square"
-        if self.turn == ColourType.WHITE:
-            return self.state[self.en_passant_square.rank - 1][self.en_passant_square.file].piece
-        else:
-            return self.state[self.en_passant_square.rank + 1][self.en_passant_square.file].piece
-
-    def get_en_passant_capture_square(self) -> Square:
-        """Returns the square which contains the captured piece in an en-passant move, determined from which colours' turn it is."""
+    def get_en_passant_capture_square(self) -> BoardSquare:
+        """Get the square which contains the captured piece in an en-passant move, determined from which colours' turn it is."""
         assert self.en_passant_square is not None, "Function should only be called when there is an en-passant square"
         if self.turn == ColourType.WHITE:
             return self.state[self.en_passant_square.rank - 1][self.en_passant_square.file]
         else:
             return self.state[self.en_passant_square.rank + 1][self.en_passant_square.file]
+
+    def get_en_passant_captured_piece(self) -> Optional[Piece]:
+        """Get the piece to be captured in an en-passant move, determined from which colours' turn it is."""
+        assert self.en_passant_square is not None, "Function should only be called when there is an en-passant square"
+        return self.get_en_passant_capture_square().piece

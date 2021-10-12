@@ -32,18 +32,6 @@ class SlidingPotentialMove(PotentialMove):
             output += 1
 
 
-# class PawnPotentialMove(PotentialMove):
-#     """Represents a potential move of a pawn."""
-#     capture: bool
-#     def __init__(self, rank_change: int, file_change: int, capture: bool = False):
-#         super().__init__(rank_change, file_change)
-#         self.capture = capture
-
-#     def __iter__(self) -> Iterator[int]:
-#         yield 1
-#         if not self.capture:
-#             yield 2
-
 class PawnStepPotentialMove(PotentialMove):
     """Represents a pawn step potential move, including double step."""
 

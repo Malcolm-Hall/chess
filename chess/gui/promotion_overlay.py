@@ -6,20 +6,20 @@ from constants import UNICODE_PIECE_SYMBOLS
 from core.piece import ColourType
 from gui.layout import Layout
 from gui.sprites import PieceSprite
-from gui.sprites import SquareSprite
+from gui.sprites import RectangleSprite
 
-PromotionSprites = Union[PieceSprite, SquareSprite]
+PromotionSprites = Union[PieceSprite, RectangleSprite]
 
 
 def promotion_sprites_generator(layout: Layout, white_promotion_batch, black_promotion_batch, background_group, promotion_group) -> list[PromotionSprites]:
     """Generates the sprites used by the PromotionOverlay"""
-    promotion_backgrounds: list[PromotionSprites] = [SquareSprite(2 * layout.square_size,
-                                                                  (1 if colour.value else 6) * layout.square_size,
-                                                                  4 * layout.square_size,
-                                                                  layout.square_size,
-                                                                  (100, 100, 200),
-                                                                  white_promotion_batch if colour == ColourType.WHITE else black_promotion_batch,
-                                                                  background_group)
+    promotion_backgrounds: list[PromotionSprites] = [RectangleSprite(2 * layout.square_size,
+                                                                     (1 if colour.value else 6) * layout.square_size,
+                                                                     4 * layout.square_size,
+                                                                     layout.square_size,
+                                                                     (100, 100, 200),
+                                                                     white_promotion_batch if colour == ColourType.WHITE else black_promotion_batch,
+                                                                     background_group)
                                                      for colour in ColourType]
 
     promotion_pieces: list[PromotionSprites] = [PieceSprite(str(piece_symbol),
